@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<head>
+	<title>Pachinkremental</title>
+
+	<meta charset="UTF-8">
+
+	<link rel="icon" id="favicon" type="image/png" href="favicon/normal.png">
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<link rel="preconnect" href="https://fonts.gstatic.com">
+	<link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
+	<script type="text/javascript" src="js/board.js"></script>
+	<script type="text/javascript" src="js/canvas.js"></script>
+	<script type="text/javascript" src="js/notifications.js"></script>
+	<script type="text/javascript" src="js/options.js"></script>
+	<script type="text/javascript" src="js/physics.js"></script>
+	<script type="text/javascript" src="js/stats.js"></script>
+	<script type="text/javascript" src="js/save_file.js"></script>
+	<script type="text/javascript" src="js/text_format.js"></script>
+	<script type="text/javascript" src="js/upgrades.js"></script>
+	<script type="text/javascript" src="js/util.js"></script>
+	<script type="text/javascript" src="js/wheel.js"></script>
+
+	<script type="text/javascript" src="js/machine.js"></script>
+	<script type="text/javascript" src="js/machine01.js"></script>
+	<script type="text/javascript" src="js/machine02.js"></script>
+
+	<script type="text/javascript" src="js/game.js"></script>
+
+</head>
+<body onload="Load()">
+	<table id="outer_table">
+		<tr>
+			<td id="board-td" rowspan="2">
+				<span id="drop_zones">
+					<button type="button" class="dropZone" id="drop_zone"
+							style="z-index: 0; left: 15px; top: 5px; width: 140px; height: 30px;"></button>
+				</span>
+				<canvas id="canvas_board"      class="board" style="z-index: 1;"></canvas>
+				<canvas id="canvas_balls"      class="board" style="z-index: 2;"></canvas>
+				<canvas id="canvas_bumpers"    class="board" style="z-index: 3;"></canvas>
+				<canvas id="canvas_targets"    class="board" style="z-index: 4;"></canvas>
+				<canvas id="canvas_auto_drop"  class="board" style="z-index: 5;"></canvas>
+				<canvas id="canvas_score_text" class="board" style="z-index: 6;"></canvas>
+				<canvas id="canvas_ripples"    class="board" style="z-index: 7;"></canvas>
+			</td>
+			<td class="rightUI" style="vertical-align: top;">
+				<div id="message_box" class="messageBox">
+					<span class="messageBoxLarge">Loading...</div>
+				</div>
+				<div id="hyper_system" class="hyperContainer" style="display: none;">
+					<button type="button" class="hyperSystem" id="button_hyper" onclick="ActivateHyper()">Activate Hyper System</button>
+					<div class="menuPadding"></div>
+					<div id="hyper_meter" class="hyperMeterBorder">
+						<div id="hyper_meter_fill" class="hyperMeterFill"></div>
+					</div>
+					<div class="menuPadding"></div>
+					<div id="hyper_status"></div>
+				</div>
+				<div id="buff" class="messageBox"> </div>
+				<div id="bonus_wheel" class="bonusWheel" style="display: none;">
+					<div id="spin_counter" class="messageBox">
+						<button type="button" class="bonusWheel" id="button_spin" onclick="SpinBonusWheel()">Spin the wheel!</button>
+						Spins:&nbsp;<span id="spin_count">0</span>
+						<span id="multi_spin">
+							| Multi&#x2011;Spin:&nbsp;&#xD7;<span id="multi_spin_count">1</span>
+						</span>
+					</div>
+					<canvas id="canvas_bonus_wheel" class="bonusWheel" style="display: block; z-index: 1; margin: 5px"></canvas>
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td class="rightUI" style="vertical-align: bottom;">
+				<div id="upgrades_container" class="upgradesContainer">
+					<button type="button" class="upgradesHeader"
+							id="button_upgrades_header" onclick="ToggleVisibility('upgrades')">
+						<span id="upgrades_collapsed">[&ndash;]</span> Upgrades
+						<span id="upgrades_header_new" class="upgradeHeaderNew" style="display: none;"><sup>New!</sup></span>
+					</button>
+					<div id="upgrades_contents" class="upgradesContents">
+						<div class="menuPadding"></div>
+						<div class="messageBox">Hover over an upgrade to see what it does.</div>
+						<div class="messageBox">Next upgrade reveal at: <span id="next_upgrade_hint"></span></div>
+						<div class="menuPadding"></div>
+						<div id="upgrade_headers" class="upgradesContents"></div>
+					</div>
+				</div>
+				<div id="machines_container" class="machinesContainer" style="display: none;">
+					<button type="button" class="machinesHeader"
+							id="button_machines_header" onclick="ToggleVisibility('machines')">
+						<span id="machines_collapsed">[&ndash;]</span> Machines
+						<span id="machines_header_new" class="machineHeaderNew" style="display: none;"><sup>New!</sup></span>
+					</button>
+					<div id="machines_contents" class="machinesContents">
+						<div class="menuPadding"></div>
+						<div class="messageBox">You can switch machines here whenever you like. Each machine has its own separate points, upgrades, and stats. You can only play one machine at a time, but you can always return to a previous machine and pick up where you left off.</div>
+						<div class="menuPadding"></div>
+						<div id="machine_buttons" class="machinesContents"></div>
+					</div>
+				</div>
+				<div id="stats_container" class="statsContainer">
+					<button type="button" class="statsHeader"
+							id="button_stats_header" onclick="ToggleVisibility('stats')">
+						<span id="stats_collapsed">[+]</span> Stats
+					</button>
+					<div id="stats_contents" class="statsContents messageBox" style="height: 0px;">
+						<div class="menuPadding"></div>
+						<div id="stats_container_total_score" class="statsRow" style="display: block;">
+							<b>Total points earned: </b><span id="stats_total_score" class="statsEntry"></span>
+						</div>
+						<div id="stats_container_total_last5s" class="statsRow" style="display: block;">
+							<b>Points earned in last 5 seconds: </b><span id="stats_score_last5s" class="statsEntry"></span>
+						</div>
+						<div id="stats_container_total_last15s" class="statsRow" style="display: block;">
+							<b>Points earned in last 15 seconds: </b><span id="stats_score_last15s" class="statsEntry"></span>
+						</div>
+						<div id="stats_container_total_last60s" class="statsRow" style="display: block;">
+							<b>Points earned in last 60 seconds: </b><span id="stats_score_last60s" class="statsEntry"></span>
+						</div>
+						<div class="menuPadding"></div>
+						<div id="stats_container_max_buff_multiplier" class="statsRow" style="display: none;">
+							<b>Highest buff multiplier: </b>&#xD7;<span id="stats_max_buff_multiplier" class="statsEntry"></span>
+						</div>
+						<div id="stats_container_max_combo" class="statsRow" style="display: none;">
+							<b>Highest combo: </b>&#xD7;<span id="stats_max_combo" class="statsEntry"></span>
+						</div>
+						<div id="stats_container_hyper_activations" class="statsRow" style="display: none;">
+							<b>Hyper System activations: </b><span id="stats_hyper_activations" class="statsEntry"></span>
+						</div>
+						<div class="menuPadding"></div>
+						<div id="stats_container_balls_dropped" class="statsRow" style="display: block;">
+							<b>Total balls dropped: </b><span id="stats_balls_dropped" class="statsEntry"></span>
+						</div>
+						<div id="stats_container_balls_dropped_manual" class="statsRow" style="display: none;">
+							<b>Balls dropped manually: </b><span id="stats_balls_dropped_manual" class="statsEntry"></span>
+						</div>
+						<div id="stats_container_stats_by_ball_type" class="statsSection">
+							<label for="stats_by_ball_type_select"><b>Stats by ball type:</b></label>
+							<select name="stats_by_ball_type_select" id="stats_by_ball_type_select"
+									onchange="UpdateStatsByBallType()">
+								<option value="balls_dropped">Total balls dropped</option>
+								<option value="total_points">Total points scored</option>
+								<option value="last5s_points">Points scored in last 5 seconds</option>
+								<option value="last15s_points">Points scored in last 15 seconds</option>
+								<option value="last60s_points">Points scored in last 60 seconds</option>
+							</select>
+							<div id="stats_by_ball_type" style="clear: both;"></div>
+						</div>
+						<div class="menuPadding"></div>
+						<b>Save file started: </b><span id="stats_save_file_started" class="statsEntry"></span> ago
+						<div class="menuPadding"></div>
+						<div id="stats_container_milestones" style="display: none;">
+							<b>Time taken to reach milestones:</b>
+							<div id="stats_section_milestones"></div>
+						</div>
+						<div class="menuPadding"></div>
+					</div>
+				</div>
+				<div id="options_container" class="optionsContainer">
+					<button type="button" class="optionsHeader"
+							id="button_options_header" onclick="ToggleVisibility('options')">
+						<span id="options_collapsed">[+]</span> Options
+					</button>
+					<div id="options_contents" class="optionsContents" style="height: 0px;">
+						<div class="menuPadding"></div>
+						<button type="button" class="optionButton"
+								id="button_save" onclick="SaveToLocalStorage()">Save</button>
+						<button type="button" class="optionButton"
+								id="button_auto_save" onclick="ToggleAutoSave()">Auto Save</button>
+						<br>
+						<button type="button" class="optionButton"
+								id="button_export_save" onclick="ExportSave()">Export save file</button>
+						<button type="button" class="optionButton"
+								id="button_import_save" onclick="ImportSave()">Import save file</button>
+						<br>
+						<button type="button" class="optionButton"
+								id="button_dark_mode" onclick="ToggleDarkMode()">Dark Mode</button>
+						<button type="button" class="optionButton"
+								id="button_notation" onclick="ToggleNotation()">Notation</button>
+						<button type="button" class="optionButton"
+								id="button_quality" onclick="ToggleQuality()">Quality</button>
+						<button type="button" class="optionButton"
+								id="button_popup_text" onclick="TogglePopupText()">Popup text</button>
+						<button type="button" class="optionButton"
+								id="button_apply_opacity_to_popup_text"
+								onclick="ToggleBooleanOption('apply_opacity_to_popup_text')">
+								Apply opacity settings to pop-up text</button>
+						<button type="button" class="optionButton"
+								id="button_show_combos" onclick="ToggleBooleanOption('show_combos')">Show combos</button>
+						<button type="button" class="optionButton"
+								id="button_upgrade_levels_bought" onclick="ToggleShowUpgradeLevels()">Upgrade levels bought</button>
+						<button type="button" class="optionButton"
+								id="button_maxed_upgrades" onclick="ToggleMaxedUpgrades()">Maxed upgrades</button>
+						<button type="button" class="optionButton"
+								id="button_april_fools" onclick="ToggleAprilFools()">April Fools</button>
+						<br>
+						<div id="options_opacity" class="optionsContents messageBox" style="display: inline-block;"></div>
+						<div id="options_favicon" class="optionsContents messageBox" style="display: inline-block;"></div>
+						<div id="options_archived_save_files"></div>
+						<br>
+						<button type="button" class="optionButtonRed"
+								id="button_erase_save" onclick="EraseSave()">Erase save file</button>
+					</div>
+				</div>
+				<div id="footer" class="messageBox">
+					<span id="title_version">Pachinkremental</span> by Poochy.EXE
+					|
+					<span id="live_ver_links" style="display: none;">
+						<a href="https://poochyexe.github.io/pachinkremental/beta/pachinkremental.html" target="_blank" rel="noopener noreferrer">Try the beta!</a>
+						| <a href="https://github.com/PoochyEXE/PoochyEXE.github.io/tree/main/pachinkremental#pachinkremental-by-poochyexe" target="_blank" rel="noopener noreferrer">manual</a>
+						| <a href="https://github.com/PoochyEXE/PoochyEXE.github.io/tree/main/pachinkremental#changelog" target="_blank" rel="noopener noreferrer">changelog</a>
+						| <a href="https://github.com/PoochyEXE/PoochyEXE.github.io/tree/main/pachinkremental" target="_blank" rel="noopener noreferrer">source&nbsp;code</a>
+					</span>
+					<span id="beta_ver_links" style="display: none;">
+						<a href="https://poochyexe.github.io/pachinkremental/pachinkremental.html" target="_blank" rel="noopener noreferrer">Back to live version</a>
+						| <a href="https://github.com/PoochyEXE/PoochyEXE.github.io/tree/main/pachinkremental/beta#pachinkremental-by-poochyexe" target="_blank" rel="noopener noreferrer">manual</a>
+						| <a href="https://github.com/PoochyEXE/PoochyEXE.github.io/tree/main/pachinkremental/beta#changelog" target="_blank" rel="noopener noreferrer">changelog</a>
+						| <a href="https://github.com/PoochyEXE/PoochyEXE.github.io/tree/main/pachinkremental/beta" target="_blank" rel="noopener noreferrer">source&nbsp;code</a>
+					</span>
+				</div>
+			</td>
+		</tr>
+	</table>
+	<div id="notifications" class="notifications"> </div>
+	<div id="tooltip" class="tooltip" style="display: none;"> </div>
+	<div id="export_save_modal" class="modal">
+		<div id="export_save_modal_content" class="modalContent">
+			<span class="modalCloseButton" onmousedown="CloseModal('export_save_modal')">&#xD7</span>
+			<div id="export_message">Your save file is below. Copy the text and keep it someplace safe.</div>
+			<br>
+			<textarea id="exported_save" class="exportedSave" onclick="this.select()" readonly></textarea>
+		</div>
+	</div>
+	<div id="ending_modal" class="modal">
+		<div id="ending_modal_content" class="modalContent">
+			<span class="modalCloseButton" onmousedown="CloseModal('ending_modal')">&#xD7</span>
+			<span style="text-align: center; vertical-align: middle;">
+				<span class="prismaticText messageBoxLarge">Congratulations!</span>
+				<br><br>
+				You've maxed all the upgrades that can be maxed, as of <span id="version_ending"></span>!
+				<br><br>
+				It's been <span id="ending_play_time" class="speedrunTimerCompleted"></span> since you started playing on this save file.
+				<br><br>
+				Thanks for playing Pachinkremental! Please check back for more updates in the future.
+				<br><br>
+				You can keep going as far as you want, but for now there are no more upgrades to discover or max out.
+				<br>Perhaps just relax and watch the balls drop, if you like.
+			</span>
+		</div>
+	</div>
+</body>
