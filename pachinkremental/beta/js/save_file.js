@@ -225,7 +225,7 @@ function LoadFromLocalStorage() {
 
 function ImportSave() {
 	let save_file_str = prompt(
-		"Paste your save file below.\nCAUTION: This will overwrite your current save file!",
+		"将您的存档代码粘贴到下方.\n警告: 这将覆盖您当前的游戏存档!",
 		""
 	);
 

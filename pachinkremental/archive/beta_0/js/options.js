@@ -245,7 +245,7 @@ function LoadFromLocalStorage() {
 
 function ImportSave() {
 	let save_file_str = prompt(
-		"Paste your save file below.\nCAUTION: This will overwrite your current save file!",
+		"将您的存档代码粘贴到下方.\n警告: 这将覆盖您当前的游戏存档!",
 		""
 	);
 
@@ -294,12 +294,12 @@ function ExportSave() {
 
 function EraseSave() {
 	const kCaution =
-		"\u26A0 CAUTION!! \u26A0 CAUTION!! \u26A0 CAUTION!! \u26A0 CAUTION!! \u26A0 CAUTION!! \u26A0\n\n";
+		"\u26A0 警告!! \u26A0 警告!! \u26A0 警告!! \u26A0 警告!! \u26A0 警告!! \u26A0\n\n";
 	let answer = prompt(
 		kCaution +
-			"This will erase all your progress and restart the game from scratch!\n\n" +
+			"这将清除您的所有进度并从头开始重新启动游戏!\n\n" +
 			kCaution +
-			'\nIf you are really sure, type "DELETE" in all caps below, then click OK.',
+			'\n如果你真的确认, 请以大写字母输入 "DELETE" 在下面的框中，然后单击确定.',
 		""
 	);
 	if (answer == "DELETE") {
