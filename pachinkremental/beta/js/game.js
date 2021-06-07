@@ -1,8 +1,9 @@
-const kVersion = "v1.7.8-beta";
+const kVersion = "v1.8.1-beta";
 const kTitleAndVersion = "Pachinkremental " + kVersion;
 
 const kFrameInterval = 1000.0 / kFPS;
 
+const kManualDropCooldown = 80.0;
 const kMinCooldownToDraw = 300.0;
 const kTopCanvasLayer = "canvas_ripples";
 
@@ -24,6 +25,7 @@ function DropBall(x, y, ball_type_index) {
 	);
 	++stats.balls_dropped;
 	++stats[ball_type.name + "_balls"];
+	state.last_ball_drop = state.current_time;
 	if (ball_type.ripple_color_rgb) {
 		state.ripples.push(
 			new RippleEffect(
@@ -148,6 +150,7 @@ function InitState() {
 			last_60s: [],
 		},
 		last_score_history_update: Date.now(),
+		last_ball_drop: 0,
 		notifications: new Array(0),
 		upgrade_headers: null,
 		upgrade_category_to_header_map: {},
@@ -256,44 +259,6 @@ function UpdateScoreDisplay(state, force_update) {
 function UpdateBuffDisplay(state) {
 	state.update_buff_display = false;
 	UpdateInnerHTML("buff", ActiveMachine(state).BuffDisplayText());
-}
-
-function UpdateHyperSystemDisplay() {
-	const machine = ActiveMachine(state);
-	if (!machine.IsUnlocked("unlock_hyper_system")) {
-		UpdateDisplay("hyper_system", "none");
-		return;
-	}
-	UpdateDisplay("hyper_system", "inline-block");
-	const save_data = machine.GetSaveData();
-	let button_elem = document.getElementById("button_hyper");
-	let status_text = "";
-	let meter_fraction = 0;
-	if (save_data.score_buff_duration > 0) {
-		meter_fraction =
-			save_data.score_buff_duration / machine.hyper_duration;
-		button_elem.disabled = true;
-		status_text = "Hyper System active!"
-	} else if (save_data.hyper_charge < machine.max_hyper_charge) {
-		meter_fraction =
-			save_data.hyper_charge / machine.max_hyper_charge;
-		button_elem.disabled = true;
-		status_text = "Hyper System charging..."
-	} else {
-		meter_fraction = 1.0;
-		button_elem.disabled = false;
-		status_text = "Hyper System ready!"
-	}
-	let meter_percent = 100.0 * meter_fraction;
-	if (meter_percent > 100.0) {
-		meter_percent = 100.0;
-	}
-	if (meter_percent < 0.0) {
-		meter_percent = 0.0;
-	}
-	document.getElementById("hyper_meter_fill").style.width =
-		meter_percent + "%";
-	UpdateInnerHTML("hyper_status", status_text);
 }
 
 function ActivateHyper() {
@@ -483,7 +448,7 @@ function Update() {
 	}
 	if (state.update_buff_display) {
 		UpdateBuffDisplay(state);
-		UpdateHyperSystemDisplay(state);
+		ActiveMachine(state).UpdateHyperSystemDisplay(state);
 	}
 	if (state.update_upgrades) {
 		UpdateUpgrades(state);
@@ -510,7 +475,8 @@ function OnClick(event) {
 	let machine = ActiveMachine(state);
 	if (machine.board.CanDropAt(pos)) {
 		let save_data = machine.GetSaveData();
-		if (CanDrop(state)) {
+		let time_since_prev_drop = state.current_time - state.last_ball_drop;
+		if (time_since_prev_drop >= kManualDropCooldown && CanDrop(state)) {
 			DropBall(board_x, board_y);
 			++save_data.stats.balls_dropped_manual;
 		}
