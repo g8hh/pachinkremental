@@ -101,7 +101,7 @@ class BonusWheelPointSpace extends BonusWheelSpace {
 	}
 
 	GetText() {
-		return FormatNumberMedium(this.value_func()) + " points";
+		return FormatNumberMedium(this.value_func()) + " 点数";
 	}
 
 	OnHit(machine, multi_spin) {

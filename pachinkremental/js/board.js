@@ -188,7 +188,7 @@ class SpinTarget extends Target {
 			draw_radius,
 			hitbox_radius,
 			color,
-			text: "Spin",
+			text: "旋转",
 			id
 		});
 	}

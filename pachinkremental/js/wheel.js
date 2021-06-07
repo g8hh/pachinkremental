@@ -98,7 +98,7 @@ class BonusWheelPointSpace extends BonusWheelSpace {
 	}
 
 	GetText() {
-		return FormatNumberShort(this.value_func()) + " points";
+		return FormatNumberShort(this.value_func()) + " 点数";
 	}
 
 	OnHit(multi_spin) {
@@ -152,11 +152,11 @@ function DefaultWheel() {
 			active_color: "#F8F",
 			text_func: () => {
 				if (IsUnlocked("better_drops_4")) {
-					return "Drop 3 special balls";
+					return "掉落 3 特殊球";
 				} else if (IsUnlocked("better_drops_2")) {
-					return "Drop 3 gemstone balls";
+					return "掉落 3 宝石球";
 				} else {
-					return "Drop 3 gold balls";
+					return "掉落 3 金球";
 				}
 			},
 			on_hit_func: (multi_spin) => {
@@ -172,7 +172,7 @@ function DefaultWheel() {
 						])
 					);
 					MaybeAddBonusWheelText({
-						text: "3 special balls!",
+						text: "3 特殊球!",
 						pos: kWheelPopupTextPos,
 						color_rgb: kWheelPopupTextColor
 					});
@@ -185,7 +185,7 @@ function DefaultWheel() {
 						])
 					);
 					MaybeAddBonusWheelText({
-						text: "3 gemstone balls!",
+						text: "3 宝石球!",
 						pos: kWheelPopupTextPos,
 						color_rgb: kWheelPopupTextColor
 					});
@@ -198,7 +198,7 @@ function DefaultWheel() {
 						])
 					);
 					MaybeAddBonusWheelText({
-						text: "3 gemstone balls!",
+						text: "3 宝石球!",
 						pos: kWheelPopupTextPos,
 						color_rgb: kWheelPopupTextColor
 					});
@@ -209,7 +209,7 @@ function DefaultWheel() {
 						kBallTypeIDs.GOLD
 					]);
 					MaybeAddBonusWheelText({
-						text: "3 gold balls!",
+						text: "3 金球!",
 						pos: kWheelPopupTextPos,
 						color_rgb: kWheelPopupTextColor
 					});
@@ -235,11 +235,11 @@ function DefaultWheel() {
 			active_color: "#FF8",
 			text_func: () => {
 				if (!IsUnlocked("better_drops_1")) {
-					return "Drop 7 gold balls";
+					return "掉落 7 金球";
 				} else if (IsUnlocked("unlock_opal_balls")) {
-					return "Drop 7 gemstone balls";
+					return "掉落 7 宝石球";
 				} else {
-					return "Drop 7 special balls";
+					return "掉落 7 特殊球";
 				}
 			},
 			on_hit_func: (multi_spin) => {
@@ -286,8 +286,8 @@ function DefaultWheel() {
 					bonus_balls = ShuffleArray(bonus_balls);
 					DropBonusBalls(bonus_balls);
 					let popup_text = IsUnlocked("unlock_opal_balls")
-						? "7 gemstone balls!"
-						: "7 special balls!";
+						? "7 宝石球!"
+						: "7 特殊球!";
 					MaybeAddBonusWheelText({
 						text: popup_text,
 						pos: kWheelPopupTextPos,
@@ -296,7 +296,7 @@ function DefaultWheel() {
 				} else {
 					DropBonusBalls([...Array(7)].map(_ => kBallTypeIDs.GOLD));
 					MaybeAddBonusWheelText({
-						text: "7 gold balls!",
+						text: "7 金球!",
 						pos: kWheelPopupTextPos,
 						color_rgb: kWheelPopupTextColor
 					});
