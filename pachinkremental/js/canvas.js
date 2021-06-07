@@ -582,7 +582,7 @@ function DrawAutoDropPosition(pos, cooldown, ctx) {
 	ctx.fillStyle = kColor;
 	ctx.font = font_size + "px sans-serif";
 	let text_width = radius * 1.5;
-	ctx.fillText("Auto", center_x, center_y + font_size / 3, text_width);
+	ctx.fillText("自动", center_x, center_y + font_size / 3, text_width);
 
 	if (cooldown > 0.0) {
 		ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
