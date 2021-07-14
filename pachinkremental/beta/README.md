@@ -24,6 +24,10 @@ Once you upgrade your auto-drop delay, the drop zone will stop turning red, to a
 
 A: This is intentional, both to make sure the game won't softlock with too many balls clogging up the board and to avoid draining batteries by making the collision detection code too performance-intensive. If you really must, pretend this is a very deep board and the balls are passing in front of or behind each other.
 
+### Q: Will there be a Prestige/New Game+ mechanic?
+
+A: I'm not saying it'll never happen, but I currently have no plans to add a prestige mechanic. I designed this game around discovering new features and mechanics as the main fun factor, drawing inspiration from games like Candy Box. I've yet to come up with a way to fit a prestige mechanic into that vision. But if you have ideas, I'll gladly listen.
+
 ## Known issues
 
 * Making the window too narrow can break some CSS and make the menu UI ugly.
@@ -39,6 +43,29 @@ I plan to archive the last version before any update that significantly nerfs pr
 ## Changelog
 
 **Caution: Spoilers below!**
+
+### v1.11.2-beta (2021-07-08)
+* Fix clicks in the drop zone being ignored when the page is scrolled down.
+* Add flavor text for Overdrive.
+
+### v1.11.1-beta (2021-07-07)
+* Fix balls acting weird after being transformed from normal to gold in mid-air by the Overdrive Midas upgrade.
+* Adjust gemstone ball description text to mention that they also don't count towards the max balls limit.
+
+### v1.11.0-beta (2021-07-06)
+* Add another Overdrive upgrade.
+* Bugfix: Check that the corresponding gemstone ball type is unlocked before revealing the Overdrive upgrade for it.
+
+### v1.10.1-beta (2021-07-06)
+* Keep the board on-screen when scrolling down, if enough headers are expanded to exceed the height of the screen.
+
+### v1.10.0-beta (2021-06-23)
+* Add Beach Balls to Bumpers machine.
+* Add 3 more Overdrive upgrades.
+* Buff: Reduced costs of Overdrive upgrades.
+* Fix score multiplier display precision flickering between 1 decimal place and rounding to the nearest integer during a Hyper Combo.
+* Add invisible walls above the sides of the board, so that if a ball bounces wildly off a bumper and over one of the top corner pegs, it'll bounce back into play instead of simply despawning due to going out of bounds.
+* Remove an extraneous peg in the right wall of the Bumpers machine.
 
 ### v1.9.2-beta (2021-06-19)
 * Fix point value text on score targets not updating when switching notations.
