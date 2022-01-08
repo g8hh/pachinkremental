@@ -1,7 +1,68 @@
+class ObjectPool {
+	constructor() {
+		this.ball_pool = [];
+		this.ripple_pool = [];
+		this.rising_text_pool = [];
+	}
+
+	NewBall(x, y, dx, dy, ball_type_index, rotation, omega) {
+		if (this.ball_pool.length == 0) {
+			return new Ball(x, y, dx, dy, ball_type_index, rotation, omega);
+		} else {
+			let ball = this.ball_pool.pop();
+			ball.Reset(x, y, dx, dy, ball_type_index, rotation, omega);
+			return ball;
+		}
+	}
+
+	ReleaseBall(ball) {
+		this.ball_pool.push(ball);
+	}
+
+	NewRipple(x, y, color_rgb, start_radius) {
+		if (this.ripple_pool.length == 0) {
+			return new RippleEffect(x, y, color_rgb, start_radius);
+		} else {
+			let ripple = this.ripple_pool.pop();
+			ripple.Reset(x, y, color_rgb, start_radius);
+			return ripple;
+		}
+	}
+
+	ReleaseRipple(ripple) {
+		this.ripple_pool.push(ripple);
+	}
+
+	NewRisingText(text, pos, color_rgb, opacity) {
+		if (this.rising_text_pool.length == 0) {
+			return new RisingText(text, pos, color_rgb, opacity);
+		} else {
+			let rising_text = this.rising_text_pool.pop();
+			rising_text.Reset(text, pos, color_rgb, opacity);
+			return rising_text;
+		}
+	}
+
+	ReleaseRisingText(rising_text) {
+		this.rising_text_pool.push(rising_text);
+	}
+}
+
+object_pool = new ObjectPool();
+
 class Point {
 	constructor(x, y) {
+		this.Reset(x, y);
+	}
+
+	Reset(x, y) {
 		this.x = x;
 		this.y = y;
+	}
+
+	CopyFrom(other) {
+		this.x = other.x;
+		this.y = other.y;
 	}
 
 	DistanceSqrToPoint(other) {
@@ -18,6 +79,16 @@ class Point {
 		return new Point(this.x + vec.x, this.y + vec.y);
 	}
 
+	MutateAdd(vec) {
+		this.x += vec.x;
+		this.y += vec.y;
+	}
+
+	MutateAddNTimes(vec, n) {
+		this.x += vec.x * n;
+		this.y += vec.y * n;
+	}
+
 	DebugStr() {
 		return `(${this.x}, ${this.y})`
 	}
@@ -25,8 +96,17 @@ class Point {
 
 class Vector {
 	constructor(x, y) {
+		this.Reset(x, y);
+	}
+
+	Reset(x, y) {
 		this.x = x;
 		this.y = y;
+	}
+
+	CopyFrom(other) {
+		this.x = other.x;
+		this.y = other.y;
 	}
 
 	Add(other) {
@@ -39,6 +119,26 @@ class Vector {
 
 	Multiply(mult) {
 		return new Vector(this.x * mult, this.y * mult);
+	}
+
+	MutateAdd(other) {
+		this.x += other.x;
+		this.y += other.y;
+	}
+
+	MutateAddNTimes(other, n) {
+		this.x += other.x * n;
+		this.y += other.y * n;
+	}
+
+	MutateSubtract(other) {
+		this.x -= other.x;
+		this.y -= other.y;
+	}
+
+	MutateMultiply(mult) {
+		this.x *= mult;
+		this.y *= mult;
 	}
 
 	MagnitudeSqr() {
@@ -54,13 +154,20 @@ class Vector {
 		return new Vector(this.x / magnitude, this.y / magnitude);
 	}
 
+	MutateNormalize() {
+		const magnitude = this.Magnitude();
+		this.x /= magnitude;
+		this.y /= magnitude;
+	}
+
 	DotProduct(other) {
 		return this.x * other.x + this.y * other.y;
 	}
 
 	ProjectionOnto(other) {
-		const other_norm = other.Normalize();
-		return other_norm.Multiply(other_norm.DotProduct(this));
+		let result = other.Normalize();
+		result.MutateMultiply(result.DotProduct(this));
+		return result;
 	}
 
 	// Rotates 90 degrees left.
@@ -91,6 +198,12 @@ class Ball {
 	constructor(x, y, dx, dy, ball_type_index, rotation, omega) {
 		this.pos = new Point(x, y);
 		this.vel = new Vector(dx, dy);
+		this.Reset(x, y, dx, dy, ball_type_index, rotation, omega);
+	}
+
+	Reset(x, y, dx, dy, ball_type_index, rotation, omega) {
+		this.pos.Reset(x, y);
+		this.vel.Reset(dx, dy);
 		this.ball_type_index = ball_type_index;
 		this.active = true;
 		this.last_hit = null;
@@ -103,13 +216,19 @@ class Ball {
 		this.total_rotations = 0.0;  // Total radians rotated.
 		this.score_targets_hit = 0;
 		this.bumpers_hit = 0;
+		this.bounces = 0;
 	}
 }
 
 class RisingText {
 	constructor(text, pos, color_rgb, opacity) {
-		this.text = text;
 		this.pos = new Point(pos.x, pos.y);
+		this.Reset(text, pos, color_rgb, opacity);
+	}
+
+	Reset(text, pos, color_rgb, opacity) {
+		this.text = text;
+		this.pos.Reset(pos.x, pos.y);
 		this.color_rgb = color_rgb;
 		this.start_time = state.current_time;
 		this.opacity = opacity;
@@ -196,19 +315,28 @@ function MaybeAddScoreText({ level, text, pos, color_rgb, opacity }) {
 		opacity > 0 &&
 		level >= ActiveMachine(state).GetSetting("display_popup_text")
 	) {
-		state.score_text.push(new RisingText(text, pos, color_rgb, opacity));
+		state.score_text.push(
+			object_pool.NewRisingText(text, pos, color_rgb, opacity)
+		);
 	}
 }
 
 function MaybeAddBonusWheelText({ text, pos, color_rgb }) {
 	if (state.enable_score_text) {
-		state.wheel_popup_text.push(new RisingText(text, pos, color_rgb, 1.0));
+		state.wheel_popup_text.push(
+			object_pool.NewRisingText(text, pos, color_rgb, 1.0)
+		);
 	}
 }
 
 class RippleEffect {
-	constructor(pos, color_rgb, start_radius) {
-		this.pos = pos;
+	constructor(x, y, color_rgb, start_radius) {
+		this.pos = new Point(x, y);
+		this.Reset(x, y, color_rgb, start_radius);
+	}
+
+	Reset(x, y, color_rgb, start_radius) {
+		this.pos.Reset(x, y);
 		this.color_rgb = color_rgb;
 		this.start_radius = start_radius;
 		this.start_time = state.current_time;
@@ -279,4 +407,44 @@ function SaveFileChecksum(save_file) {
 		result &= 0xffffffff;
 	}
 	return result;
+}
+
+function ShowButtonTooltip(elem, inner_html, tooltip_width) {
+	state.active_tooltip = elem.id;
+	const kDefaultWidth = 200;
+	const kPadding = 5;
+	const kTargetAspectRatio = 0.75;
+	let body_rect = document.body.getBoundingClientRect();
+	let button_rect = elem.getBoundingClientRect();
+	let tooltip_elem = document.getElementById("tooltip");
+	tooltip_elem.style.display = "block";
+	tooltip_elem.innerHTML = inner_html;
+	let width = kDefaultWidth;
+	if (tooltip_width) {
+		width = tooltip_width;
+	} else {
+		tooltip_elem.style.width = kDefaultWidth + "px";
+		let tooltip_rect = tooltip_elem.getBoundingClientRect();
+		if (tooltip_rect.width * kTargetAspectRatio < tooltip_rect.height) {
+			width = Math.max(kDefaultWidth, Math.ceil(Math.sqrt(tooltip_rect.width * tooltip_rect.height / kTargetAspectRatio)));
+		}
+	}
+	tooltip_elem.style.width = width + "px";
+	let left_pos = Math.min(
+		(button_rect.left + button_rect.right - width) / 2.0,
+		body_rect.right - width - kPadding
+	);
+	let top_pos = button_rect.top - tooltip_elem.offsetHeight - kPadding;
+	if (top_pos < 0) {
+		top_pos = button_rect.bottom + kPadding;
+	}
+	tooltip_elem.style.left = left_pos + "px";
+	tooltip_elem.style.top = top_pos + "px";
+}
+
+function HideButtonTooltip(button_elem) {
+	if (state.active_tooltip != button_elem.id) {
+		return;
+	}
+	document.getElementById("tooltip").style.display = "none";
 }

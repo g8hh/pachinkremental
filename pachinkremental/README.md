@@ -24,10 +24,14 @@ Once you upgrade your auto-drop delay, the drop zone will stop turning red, to a
 
 A: This is intentional, both to make sure the game won't softlock with too many balls clogging up the board and to avoid draining batteries by making the collision detection code too performance-intensive. If you really must, pretend this is a very deep board and the balls are passing in front of or behind each other.
 
+### Q: Will there be a Prestige/New Game+ mechanic?
+
+A: I'm not saying it'll never happen, but I currently have no plans to add a prestige mechanic. I designed this game around discovering new features and mechanics as the main fun factor, drawing inspiration from games like Candy Box. I've yet to come up with a way to fit a prestige mechanic into that vision. But if you have ideas, I'll gladly listen.
+
 ## Known issues
 
 * Making the window too narrow can break some CSS and make the menu UI ugly.
-* The ball opacity options don't work in Firefox.
+* The ball opacity options don't work in Firefox, due to [a known bug with Firefox's implementation of the Canvas 2D API](https://bugzilla.mozilla.org/show_bug.cgi?id=1164912).
 * Firefox seems to occasionally delete the save file upon closing the tab. If you're playing in Firefox, export your save frequently!
 
 ## Archived versions
@@ -39,6 +43,88 @@ I plan to archive the last version before any update that significantly nerfs pr
 ## Changelog
 
 **Caution: Spoilers below!**
+
+### v2.0.14 (2021-12-03)
+* More performance optimizations to reduce the amount of repainting the browser has to do.
+* Migrate to `requestAnimationFrame` and `performance.now()` for timing. I've been procrastinating on this one for way too long as well.
+
+### v2.0.13 (2021-11-24)
+* Optimize code that renders the Spiral Power meter.
+* Fix an off-by-one bug when computing how many cells of the Spiral Power meter should be lit.
+
+### v2.0.12 (2021-11-24)
+* Refactor code for options and machine-specific stats to make it easier to add new ones.
+* Add stat for points earned by the Bonus Wheel in the Basic machine.
+* Reorder the Gemstone ball stats in the Bumpers machine to match the order of the balls in the upgrades menu.
+* Fix a bug where some stats took a while to re-appear in the Stats panel after switching back to a previously played machine.
+* Fix a hit rate of 0 showing as "NaN" for bumpers.
+* Fix top-level collapsible headers (Upgrades, Machines, Stats, and Options) not restoring to their saved collapsed/open states when loading a save file.
+
+### v2.0.9 (2021-11-22)
+* Make the board glow based on Hyper System and Overdrive status. This can be turned off in the options.
+* Refactor the code and remove some redundant operations to make the game slightly faster at loading, switching machines, and loading save files.
+
+### v2.0.8 (2021-11-22)
+* When starting a new save file, try to guess whether the player prefers light or dark mode based on system settings and automatically turn dark mode on/off accordingly.
+
+### v2.0.7 (2021-11-20)
+* Refactor and optimize code for rendering Opal and Ultimate balls and use HSL color space for them.
+
+### v2.0.6 (2021-11-16)
+* Bumpers machine: Add "Opal+ only" and "Ultimate only" pop-up text options.
+* Optimize Spiral Power meter drawing code by caching individual cell colors.
+
+### v2.0.5 (2021-11-12)
+* Fix a bug where the game has a CPU spike and freezes for a bit when script execution resumes after being paused for a while (e.g. switching back to the tab).
+* Refactor some of the machine-specific feature code (Bonus Wheel, Hyper System, and Spiral Power) to make it easier to add new machines in the future.
+* Optimize compression on the Rubber Band and Spiral Ball favicons. (Which only saves 1.5 KB of loading, but whatever.)
+
+### v2.0.4 (2021-11-12)
+* Fix bug where hit rates are broken if a target has never been hit.
+
+### v2.0.3 (2021-11-11)
+* Fix another bug where save file corruption could cause break an upgrade button, and clicking it would spend the points without actually buying the upgrade.
+
+### v2.0.2 (2021-11-11)
+* Fix a bug where save file corruption could cause an upgrade to display as "Unlocked!" when it hasn't been purchased yet.
+
+### v2.0.1 (2021-11-11)
+* Adjust buttons for Rubber Band Balls and Spiral Balls to make the text more readable.
+
+### v2.0.0 (2021-11-11)
+* **Major new feature: A second machine!**
+* Minor nerf: Rate-limit manual drops so that hypertapping/mashing the mouse button doesn't become the optimal strategy.
+* QoL improvements:
+	* Hold Shift to buy as many levels of an upgrade as you can, in one click.
+	* Add alternate non-animated style for Opal ball upgrade buttons, toggleable in the options.
+	* Shrink buttons for maxed upgrades, with an option to revert to the old behavior and keep them at full size.
+	* Save file now saves which collapsible headers are collapsed, and will restore them to their previous state when loading or switching between machines.
+	* Adjust pop-up text color when buying Point Multiplier upgrade in dark mode.
+	* Add option to apply opacity settings to pop-up text.
+	* Add engineering and 漢字 (Japanese kanji) notations.
+	* Add extra protections against save file corruption.
+	* Minor improvements to the way the game handles a corrupted save file.
+* Stats panel improvements:
+	* Add stats to track points scored by each ball type, both all-time and in the last 5/15/60 seconds.
+	* Add toggle in stats panel to show how often each target or slot is hit.
+	* Show time since save file was started and time taken (since the save file was started) to max each machine.
+	* Add stats for longest-lasting Beach Ball and most rotations by a Beach Ball.
+* Massive under-the-hood refactor of the game engine, including plenty of performance optimizations:
+	* Optimize the physics engine to reduce memory churn there.
+	* Use object pooling to reduce memory churn further.
+	* Optimize the code for rendering Beach Balls, in particular caching the color palette.
+	* Improve performance by being smarter about what parts of upgrade buttons need to be updated, instead of re-rendering everything every time something changes.
+* Bug fixes:
+	* Require buying Better Ball Drops 2 before showing Better Ball Drops 3, and likewise buying 3 before showing 4.
+	* Fix Auto-Spin making the "Spin the wheel!" button flicker.
+	* Fix upgrade tooltips sometimes going partially off-screen.
+* Other minor adjustments:
+	* Add invisible walls above the sides of the board, so that if a ball bounces wildly off a bumper and over one of the top corner pegs, it'll bounce back into play instead of simply despawning due to going out of bounds.
+	* Keep the board on-screen when scrolling down, if enough headers are expanded to exceed the height of the screen.
+	* Move the Gold Balls upgrades above Bonus Wheel upgrades in the Basic machine, now that shrinking maxed upgrade buttons means Board, Auto-Drop and Gold Balls upgrades can fit neatly in one row on a standard HD display (1360x768 or 1366x768).
+	* Trim trailing zeros in significand in scientific notation.
+	* Change the look of the "Spin the wheel!" button.
+	* Add a modal for when you max out a machine, to make it a bit more clear that the next step is to move on to the next machine.
 
 ### v1.1.2 (2021-05-09)
 * Make bonus wheel pop-up text easier to read.
@@ -55,7 +141,7 @@ I plan to archive the last version before any update that significantly nerfs pr
 * Tweaked a couple pop-up text colors in dark mode to make them easier to read.
 * Fixed 2.4x wheel speed being displayed as "2.40x".
 
-### v1.0.0-RC1 (2021-04-11)
+### v1.0.0-RC1 (2021-04-13)
 * Pachinkremental is out of beta!
 * Lots of rebalancing. In order by game progression:
 	* Nerf: Lower the max Gold ball rate to 15%.

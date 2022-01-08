@@ -68,7 +68,7 @@ class Upgrade {
 
 	Update() {
 		this.on_update();
-		state.update_upgrade_buttons = true;
+		state.update_upgrade_buttons_all = true;
 	}
 
 	Buy() {
@@ -80,19 +80,25 @@ class Upgrade {
 		if (this.IsMaxed()) {
 			return false;
 		}
+		if (!save_data.upgrade_levels[this.id]) {
+			save_data.upgrade_levels[this.id] = 0;
+		}
 		let new_level = ++save_data.upgrade_levels[this.id];
 		save_data.points -= cost;
 		this.Update();
 		this.on_buy(new_level);
 		if (new_level == this.max_level) {
 			this.machine.CheckMachineMaxed();
-			ShowEndingIfAllMachinesMaxed();
 		}
 		return true;
 	}
 
 	OnClick() {
-		this.Buy();
+		if (state.holding_shift) {
+			while (this.Buy());
+		} else {
+			this.Buy();
+		}
 	}
 
 	GetLevel() {
@@ -107,7 +113,7 @@ class Upgrade {
 		return this.value_func(this.GetLevel());
 	}
 
-	GetText() {
+	GetText(state) {
 		let result = "<b>" + this.name + "</b>";
 		let level = this.GetLevel();
 		result +=
@@ -117,11 +123,25 @@ class Upgrade {
 		if (this.IsMaxed()) {
 			result += " (MAX)";
 		} else {
+			let total_cost = this.cost_func(level);
+			let level_after = level + 1;
+			if (state.holding_shift) {
+				const points_left = this.machine.GetSaveData().points;
+				while (level_after < this.max_level) {
+					let next_cost = total_cost + this.cost_func(level_after);
+					if (next_cost <= points_left) {
+						++level_after;
+						total_cost = next_cost;
+					} else {
+						break;
+					}
+				}
+			}
 			result +=
 				" \u2192 " +
-				FormatNumberMedium(this.value_func(level + 1)) +
+				FormatNumberMedium(this.value_func(level_after)) +
 				this.value_suffix;
-			result += "<br>Cost: " + FormatNumberMedium(this.cost_func(level));
+			result += "<br>Cost: " + FormatNumberMedium(total_cost);
 		}
 		if (GetSetting("show_upgrade_levels")) {
 			result += "<br>Bought: " + level;
@@ -166,7 +186,7 @@ class DelayReductionUpgrade extends Upgrade {
 		this.item_suffix = item_suffix;
 	}
 
-	GetText() {
+	GetText(state) {
 		let result = "<b>" + this.name + "</b>";
 		let level = this.GetLevel();
 		let delay_now = this.value_func(level);
@@ -181,7 +201,21 @@ class DelayReductionUpgrade extends Upgrade {
 				this.item_suffix +
 				"/min) (MAX)";
 		} else {
-			let delay_next = this.value_func(level + 1);
+			let total_cost = this.cost_func(level);
+			let level_after = level + 1;
+			if (state.holding_shift) {
+				const points_left = this.machine.GetSaveData().points;
+				while (level_after <= this.max_level) {
+					let next_cost = total_cost + this.cost_func(level_after);
+					if (next_cost <= points_left) {
+						++level_after;
+						total_cost = next_cost;
+					} else {
+						break;
+					}
+				}
+			}
+			let delay_next = this.value_func(level_after);
 			let rate_next = 60000.0 / delay_next;
 			result +=
 				"<br>" + FormatNumberMedium(delay_now) + this.value_suffix;
@@ -190,7 +224,7 @@ class DelayReductionUpgrade extends Upgrade {
 			result += "<br>(" + FormatNumberMedium(rate_now);
 			result += " \u2192 " + FormatNumberMedium(rate_next);
 			result += " " + this.item_suffix + "/min)";
-			result += "<br>Cost: " + FormatNumberMedium(this.cost_func(level));
+			result += "<br>Cost: " + FormatNumberMedium(total_cost);
 		}
 		if (GetSetting("show_upgrade_levels")) {
 			result += "<br>Bought: " + level;
@@ -237,12 +271,12 @@ class FeatureUnlockUpgrade extends Upgrade {
 		}
 	}
 
-	GetText() {
+	GetText(state) {
 		let result = "<b>" + this.name + "</b><br>";
-		if (this.GetLevel() == 0) {
-			return "<b>" + this.name + "</b><br>Cost: " + FormatNumberMedium(this.cost_func());
-		} else {
+		if (this.GetLevel() > 0) {
 			return "<b>" + this.unlocked_name + "</b><br>Unlocked!";
+		} else {
+			return "<b>" + this.name + "</b><br>Cost: " + FormatNumberMedium(this.cost_func());
 		}
 		return result;
 	}
@@ -311,8 +345,8 @@ class CirnoFixedCostUpgrade extends FixedCostFeatureUnlockUpgrade {
 		});
 	}
 
-	GetText() {
-		return super.GetText().replace("9", "⑨");
+	GetText(state) {
+		return super.GetText(state).replace("9", "⑨");
 	}
 }
 
@@ -370,7 +404,7 @@ class ToggleUnlockUpgrade extends FixedCostFeatureUnlockUpgrade {
 		this.Update();
 	}
 
-	GetText() {
+	GetText(state) {
 		let result = "<b>" + this.name + "</b><br>";
 		if (this.GetLevel() == 0) {
 			result += "Cost: " + FormatNumberMedium(this.GetCost());
@@ -421,6 +455,7 @@ class BallTypeUnlockUpgrade extends FeatureUnlockUpgrade {
 				UpdateFavicon(state);
 			},
 			tooltip_width,
+			on_buy: UpdateOptionsButtons
 		});
 	}
 }
@@ -534,6 +569,10 @@ function ButtonClassForUpgradeCategory(category) {
 		return "eightBallUpgradeButton";
 	} else if (category == "beach_balls") {
 		return "beachBallUpgradeButton";
+	} else if (category == "rubberband_balls") {
+		return "rubberBandBallUpgradeButton";
+	} else if (category == "spiral_balls") {
+		return "spiralBallUpgradeButton";
 	} else {
 		return "upgradeButton";
 	}
@@ -547,7 +586,7 @@ function InitUpgradeButtons(upgrades) {
 		category_div.innerHTML +=
 			'<div class="upgradeButtonWrapper" id="' +
 			upgrade_id +
-			'" onmouseenter="ShowUpgradeTooltip(this)" onmouseleave="HideUpgradeTooltip(this)">' +
+			'" onmouseenter="ShowUpgradeTooltip(this)" onmouseleave="HideButtonTooltip(this)">' +
 			'<button type="button" class="' +
 			upgrade.button_class +
 			'" id="button_upgrade_' +
@@ -571,24 +610,42 @@ function UpgradeButtonHandler(elem) {
 	ActiveMachine(state).upgrades[upgrade_id].OnClick();
 }
 
-function UpdateUpgradeButtons(state) {
-	state.update_upgrade_buttons = false;
-
+function UpdateUpgradeButtonsText(state) {
+	state.update_upgrade_buttons_text = false;
 	const machine = ActiveMachine(state);
-
 	UpdateInnerHTML("next_upgrade_hint", machine.NextUpgradeHint());
-
 	for (let id in machine.upgrades) {
-		let upgrade = machine.upgrades[id];
+		const upgrade = machine.upgrades[id];
+		UpdateInnerHTML("button_upgrade_" + id, upgrade.GetText(state));
+	}
+}
+
+function UpdateUpgradeButtonsEnabled(state) {
+	state.update_upgrade_buttons_enabled = false;
+	const machine = ActiveMachine(state);
+	UpdateInnerHTML("next_upgrade_hint", machine.NextUpgradeHint());
+	for (let id in machine.upgrades) {
+		const upgrade = machine.upgrades[id];
 		let elem = document.getElementById("button_upgrade_" + id);
-		let html = upgrade.GetText(state);
-		if (elem.innerHTML != html) {
-			elem.innerHTML = html;
-		}
 		let disabled = !upgrade.ShouldEnableButton();
 		if (elem.disabled != disabled) {
 			elem.disabled = disabled;
 		}
+		if (disabled && GetSetting("maxed_upgrades") == 1 && upgrade.IsMaxed()) {
+			elem.classList.add("upgradeButtonMaxedShrink");
+		} else {
+			elem.classList.remove("upgradeButtonMaxedShrink");
+		}
+	}
+}
+
+function UpdateUpgradeButtonsVisible(state) {
+	state.update_upgrade_buttons_visible = false;
+	const machine = ActiveMachine(state);
+	UpdateInnerHTML("next_upgrade_hint", machine.NextUpgradeHint());
+	for (let id in machine.upgrades) {
+		const upgrade = machine.upgrades[id];
+		let elem = document.getElementById("button_upgrade_" + id);
 		let visible = upgrade.visible_func();
 		let display = visible ? "inline" : "none";
 		if (elem.style.display != display) {
@@ -604,11 +661,6 @@ function UpdateUpgradeButtons(state) {
 				}
 			}
 		}
-		if (disabled && GetSetting("maxed_upgrades") == 1 && upgrade.IsMaxed()) {
-			elem.classList.add("upgradeButtonMaxedShrink");
-		} else {
-			elem.classList.remove("upgradeButtonMaxedShrink");
-		}
 	}
 
 	for (let i = 0; i < state.upgrade_headers.length; ++i) {
@@ -618,59 +670,31 @@ function UpdateUpgradeButtons(state) {
 	}
 }
 
-function ShowUpgradeTooltip(elem) {
-	state.active_tooltip = elem.id;
-	const kDefaultWidth = 200;
-	const kPadding = 5;
-	const kTargetAspectRatio = 0.75;
-	let body_rect = document.body.getBoundingClientRect();
-	let button_rect = elem.getBoundingClientRect();
-	let tooltip_elem = document.getElementById("tooltip");
-	const upgrade = ActiveMachine(state).upgrades[elem.id];
-	tooltip_elem.style.display = "block";
-	tooltip_elem.innerHTML = upgrade.description;
-	let width = kDefaultWidth;
-	if (upgrade.tooltip_width) {
-		width = upgrade.tooltip_width;
-	} else {
-		tooltip_elem.style.width = kDefaultWidth + "px";
-		let tooltip_rect = tooltip_elem.getBoundingClientRect();
-		if (tooltip_rect.width * kTargetAspectRatio < tooltip_rect.height) {
-			width = Math.max(kDefaultWidth, Math.ceil(Math.sqrt(tooltip_rect.width * tooltip_rect.height / kTargetAspectRatio)));
-		}
-	}
-	tooltip_elem.style.width = width + "px";
-	let left_pos = Math.min(
-		(button_rect.left + button_rect.right - width) / 2.0,
-		body_rect.right - width - kPadding
-	);
-	let top_pos = button_rect.top - tooltip_elem.offsetHeight - kPadding;
-	if (top_pos < 0) {
-		top_pos = button_rect.bottom + kPadding;
-	}
-	tooltip_elem.style.left = left_pos + "px";
-	tooltip_elem.style.top = top_pos + "px";
+function UpdateUpgradeButtonsAll(state) {
+	state.update_upgrade_buttons_all = false;
+	UpdateUpgradeButtonsText(state);
+	UpdateUpgradeButtonsEnabled(state);
+	UpdateUpgradeButtonsVisible(state);
 }
 
-function HideUpgradeTooltip(button_elem) {
-	if (state.active_tooltip != button_elem.id) {
-		return;
-	}
-	document.getElementById("tooltip").style.display = "none";
+function ShowUpgradeTooltip(elem) {
+	const upgrade = ActiveMachine(state).upgrades[elem.id];
+	ShowButtonTooltip(elem, upgrade.description, upgrade.tooltip_width);
 }
 
 function CurrentPlayTime() {
-	return Date.now() - state.save_file.stats.start_time;;
+	return Date.now() - state.save_file.stats.start_time;
 }
 
 function ShowEndingIfAllMachinesMaxed() {
 	for (let i = 0; i < state.machines.length; ++i) {
 		if (!state.machines[i].AreAllUpgradesMaxed()) {
-			return;
+			return false;
 		}
 	}
 
 	let play_time = FormatDurationLong(CurrentPlayTime(), /*show_ms=*/true);
 	UpdateInnerHTML("ending_play_time", play_time);
 	document.getElementById("ending_modal").style.display = "block";
+	return true;
 }

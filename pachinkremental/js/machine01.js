@@ -87,7 +87,7 @@ class SpinTarget extends Target {
 			draw_radius,
 			hitbox_radius,
 			color,
-			text: "旋转",
+			text: "Spin",
 			id,
 			pass_through: true
 		});
@@ -1210,11 +1210,11 @@ class FirstMachine extends PachinkoMachine {
 				active_color: "#F8F",
 				text_func: () => {
 					if (this.IsUnlocked("better_drops_4")) {
-						return "掉落 3 特殊球";
+						return "Drop 3 special balls";
 					} else if (this.IsUnlocked("better_drops_2")) {
-						return "掉落 3 宝石球";
+						return "Drop 3 gemstone balls";
 					} else {
-						return "掉落 3 金球";
+						return "Drop 3 gold balls";
 					}
 				},
 				on_hit_func: (machine, multi_spin) => {
@@ -1230,7 +1230,7 @@ class FirstMachine extends PachinkoMachine {
 							])
 						);
 						MaybeAddBonusWheelText({
-							text: "3 特殊球!",
+							text: "3 special balls!",
 							pos: kWheelPopupTextPos,
 							color_rgb: kWheelPopupTextColor
 						});
@@ -1243,7 +1243,7 @@ class FirstMachine extends PachinkoMachine {
 							])
 						);
 						MaybeAddBonusWheelText({
-							text: "3 宝石球!",
+							text: "3 gemstone balls!",
 							pos: kWheelPopupTextPos,
 							color_rgb: kWheelPopupTextColor
 						});
@@ -1256,7 +1256,7 @@ class FirstMachine extends PachinkoMachine {
 							])
 						);
 						MaybeAddBonusWheelText({
-							text: "3 宝石球!",
+							text: "3 gemstone balls!",
 							pos: kWheelPopupTextPos,
 							color_rgb: kWheelPopupTextColor
 						});
@@ -1267,7 +1267,7 @@ class FirstMachine extends PachinkoMachine {
 							kFirstMachineBallTypeIDs.GOLD
 						]);
 						MaybeAddBonusWheelText({
-							text: "3 金球!",
+							text: "3 gold balls!",
 							pos: kWheelPopupTextPos,
 							color_rgb: kWheelPopupTextColor
 						});
@@ -1293,11 +1293,11 @@ class FirstMachine extends PachinkoMachine {
 				active_color: "#FF8",
 				text_func: () => {
 					if (!this.IsUnlocked("better_drops_1")) {
-						return "掉落 7 金球";
+						return "Drop 7 gold balls";
 					} else if (this.IsUnlocked("unlock_opal_balls")) {
-						return "掉落 7 宝石球";
+						return "Drop 7 gemstone balls";
 					} else {
-						return "掉落 7 特殊球";
+						return "Drop 7 special balls";
 					}
 				},
 				on_hit_func: (machine, multi_spin) => {
@@ -1344,8 +1344,8 @@ class FirstMachine extends PachinkoMachine {
 						bonus_balls = ShuffleArray(bonus_balls);
 						this.DropBonusBalls(bonus_balls);
 						let popup_text = this.IsUnlocked("unlock_opal_balls")
-							? "7 宝石球!"
-							: "7 特殊球!";
+							? "7 gemstone balls!"
+							: "7 special balls!";
 						MaybeAddBonusWheelText({
 							text: popup_text,
 							pos: kWheelPopupTextPos,
@@ -1354,7 +1354,7 @@ class FirstMachine extends PachinkoMachine {
 					} else {
 						this.DropBonusBalls([...Array(7)].map(_ => kFirstMachineBallTypeIDs.GOLD));
 						MaybeAddBonusWheelText({
-							text: "7 金球!",
+							text: "7 gold balls!",
 							pos: kWheelPopupTextPos,
 							color_rgb: kWheelPopupTextColor
 						});
@@ -1469,7 +1469,7 @@ class FirstMachine extends PachinkoMachine {
 			UpdateSpinCounter();
 			MaybeAddScoreText({
 				level: score_text_level,
-				text: `+${FormatNumberShort(value)} 旋转`,
+				text: `+${FormatNumberShort(value)} Spins`,
 				pos: text_pos,
 				color_rgb: color_rgb,
 				opacity: PopupTextOpacityForBallType(ball.ball_type_index),
@@ -1479,7 +1479,7 @@ class FirstMachine extends PachinkoMachine {
 			UpdateSpinCounter();
 			MaybeAddScoreText({
 				level: 0,
-				text: "+1 旋转",
+				text: "+1 Spin",
 				pos: text_pos,
 				color_rgb: "0,170,0",
 				opacity: PopupTextOpacityForBallType(ball.ball_type_index),

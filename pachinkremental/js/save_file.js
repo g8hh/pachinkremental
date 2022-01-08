@@ -1,4 +1,4 @@
-const kIsLiveVersion = false;
+const kIsLiveVersion = true;
 const kLiveSaveFileName = "save_file";
 const kBetaSaveFileName = "beta_save_file";
 const kSaveFileVersion = 7;
@@ -228,7 +228,7 @@ function LoadFromLocalStorage() {
 
 function ImportSave() {
 	let save_file_str = prompt(
-		"将您的存档代码粘贴到下方.\n警告: 这将覆盖您当前的游戏存档!",
+		"Paste your save file below.\nCAUTION: This will overwrite your current save file!",
 		""
 	);
 

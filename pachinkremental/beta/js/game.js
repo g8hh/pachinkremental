@@ -1,4 +1,4 @@
-const kVersion = "v1.11.2-beta";
+const kVersion = "v2.0.14";
 const kTitleAndVersion = "Pachinkremental " + kVersion;
 
 const kFrameInterval = 1000.0 / kFPS;
@@ -10,7 +10,9 @@ const kTopCanvasLayer = "canvas_ripples";
 function CreateBallWithNoise(x, y, dx, dy, ball_type_index) {
 	let dNoise = SampleGaussianNoise(0.0, 20.0);
 	let angleNoise = SampleGaussianNoise(0.0, 0.1);
-	return new Ball(x, y, dx + dNoise.x, dy + dNoise.y, ball_type_index, angleNoise.x, angleNoise.y);
+	return object_pool.NewBall(
+		x, y, dx + dNoise.x, dy + dNoise.y, ball_type_index, angleNoise.x, angleNoise.y
+	);
 }
 
 function DropBall(x, y, ball_type_index) {
@@ -28,8 +30,9 @@ function DropBall(x, y, ball_type_index) {
 	state.last_ball_drop = state.current_time;
 	if (ball_type.ripple_color_rgb) {
 		state.ripples.push(
-			new RippleEffect(
-				new Point(x, y),
+			object_pool.NewRipple(
+				x,
+				y,
 				ball_type.ripple_color_rgb,
 				kBallRadius
 			)
@@ -86,10 +89,16 @@ function UpdateScoreHistory(state) {
 
 function LoadActiveMachine(state) {
 	state.update_stats_panel = true;
-	state.update_upgrade_buttons = true;
+	state.update_upgrade_buttons_all = true;
 	state.update_upgrades = true;
 	state.update_buff_display = true;
 	state.redraw_all = true;
+
+	state.board_glow.color = null;
+	state.board_glow.size = null;
+
+	UpdateDisplay("hyper_system", "none");
+	UpdateDisplay("spiral_power", "none");
 
 	const machine = ActiveMachine(state);
 	const num_ball_types = machine.BallTypes().length;
@@ -97,6 +106,10 @@ function LoadActiveMachine(state) {
 	machine.OnActivate();
 	state.display_points = save_data.points;
 	state.balls_by_type = [...Array(num_ball_types)].map(_ => new Array(0));
+	state.wheel_popup_text.length = 0;
+	state.score_text.length = 0;
+	state.ripples.length = 0;
+
 	state.upgrade_headers = machine.UpgradeHeaders();
 	for (let i = 0; i < state.upgrade_headers.length; ++i) {
 		let header = state.upgrade_headers[i];
@@ -129,12 +142,17 @@ function LoadActiveMachine(state) {
 	UpdateOpacitySlidersFromSaveFile(state);
 	UpdateFaviconChoiceFromSaveFile(state);
 	UpdateCollapsibles(save_data.options.collapsed);
+	UpdateHitRatesDisplay(state);
+	UpdateMachinesHeader(state);
+	UpdateDarkMode();
+	UpdateOpalBallUpgradesStyle();
+	ResizeCanvas();
 	OnResize();
 }
 
 function InitState() {
 	let state = {
-		current_time: Date.now(),
+		current_time: performance.now(),
 		machines: [
 			new FirstMachine(kFirstMachineID, "Basic"),
 			new BumperMachine(kBumperMachineID, "Bumpers"),
@@ -149,21 +167,31 @@ function InitState() {
 			last_15s: [],
 			last_60s: [],
 		},
-		last_score_history_update: Date.now(),
+		last_score_history_update: performance.now(),
 		last_ball_drop: 0,
+		board_glow: {
+			color: null,
+			size: null,
+		},
 		notifications: new Array(0),
 		upgrade_headers: null,
 		upgrade_category_to_header_map: {},
 		display_points: 0,
 		canvas_scale: 2.0,
+		frames_since_redraw: 0,
 		redraw_all: true,
 		redraw_targets: false,
 		redraw_auto_drop: false,
+		redraw_stats_overlay: false,
 		redraw_wheel: false,
+		redraw_board_glow: false,
 		reset_target_text: false,
 		update_stats_panel: true,
 		update_upgrades: true,
-		update_upgrade_buttons: true,
+		update_upgrade_buttons_all: true,
+		update_upgrade_buttons_text: true,
+		update_upgrade_buttons_enabled: true,
+		update_upgrade_buttons_visible: true,
 		update_buff_display: true,
 		enable_score_text: true,
 		auto_drop_cooldown: 1000.0,
@@ -171,6 +199,7 @@ function InitState() {
 		active_tooltip: null,
 		wheel_popup_text: new Array(0),
 		ripples: new Array(0),
+		holding_shift: false,
 		april_fools: false,
 		last_drawn: {
 			can_drop: true,
@@ -199,26 +228,7 @@ function InitState() {
 				machine_maxed_times: {}
 			},
 			machines: {},
-			options: {
-				auto_save_enabled: true,
-				dark_mode: false,
-				classic_opal_balls: false,
-				show_upgrade_levels: false,
-				apply_opacity_to_popup_text: true,
-				show_combos: true,
-				notation: 0,
-				favicon: -1,
-				april_fools_enabled: 2,
-				quality: 0,
-				display_popup_text: 0,
-				maxed_upgrades: 1,
-				collapsed: {
-					upgrades: false,
-					machines: false,
-					stats: true,
-					options: true,
-				},
-			},
+			options: DefaultGlobalSettings(),
 		}
 	};
 	for (let i = 0; i < state.machines.length; ++i) {
@@ -320,25 +330,8 @@ function SwitchMachine(index) {
 	state.active_machine_index = index;
 	const new_active_machine = state.machines[index];
 	state.save_file.active_machine = new_active_machine.id;
-	state.redraw_all = true;
-	state.update_stats_panel = true;
-	state.update_upgrades = true;
-	state.update_upgrade_buttons = true;
-	state.update_buff_display = true;
-	state.display_points = new_active_machine.GetSaveData().points;
-	state.wheel_popup_text.length = 0;
-	state.score_text.length = 0;
-	state.ripples.length = 0;
 	LoadActiveMachine(state);
 	UpdateScoreDisplay(state, /*force_update=*/true);
-	UpdateMachinesHeader(state);
-	UpdateDarkMode();
-	ResizeCanvas();
-
-	for (let i = 0; i < state.score_history.length; ++i) {
-		state.score_history[i] = 0;
-	}
-
 }
 
 function UpdateOneFrame(state) {
@@ -357,7 +350,11 @@ function UpdateOneFrame(state) {
 	}
 
 	if (save_data.score_buff_duration > 0) {
-		save_data.score_buff_duration -= kFrameInterval;
+		let elapsed = kFrameInterval;
+		if (save_data.score_buff_time_dilation > 1.0) {
+			elapsed /= save_data.score_buff_time_dilation;
+		}
+		save_data.score_buff_duration -= elapsed;
 		if (save_data.score_buff_duration <= 0) {
 			save_data.score_buff_duration = 0;
 			machine.OnBuffTimeout(state);
@@ -380,12 +377,7 @@ function UpdateOneFrame(state) {
 		}
 	}
 
-	if (machine.bonus_wheel && machine.bonus_wheel.IsSpinning()) {
-		state.redraw_wheel = true;
-		machine.bonus_wheel.UpdateOneFrame();
-	} else if (machine.AutoSpinOn() && save_data.spins > 0) {
-		SpinBonusWheel();
-	}
+	machine.UpdateOneFrame(state);
 
 	if (state.last_score_history_update + 5000.0 <= state.current_time) {
 		UpdateScoreHistory(state);
@@ -421,18 +413,39 @@ function CheckEvents() {
 	state.timeouts.check_event = setTimeout(CheckEvents, MillisecondsToMidnight());
 }
 
+function CheckShiftKeyToggle(event) {
+	if (state.holding_shift != event.shiftKey) {
+		state.holding_shift = event.shiftKey;
+		state.update_upgrade_buttons_text = true;
+	}
+}
+
+function OnKeyUp(event) {
+	CheckShiftKeyToggle(event);
+}
+
+function OnKeyDown(event) {
+	CheckShiftKeyToggle(event);
+}
+
 function Update() {
 	const num_frames = Math.floor(
-		(Date.now() - state.current_time) / kFrameInterval
+		(performance.now() - state.current_time) / kFrameInterval
 	);
-	const elapsed = num_frames * kFrameInterval;
-	if (num_frames <= 0) {
-		return;
-	}
 	for (let i = 0; i < num_frames; ++i) {
-		state.enable_score_text = num_frames - i < 60;
+		state.enable_score_text = (num_frames - i) < 60;
 		UpdateOneFrame(state);
 	}
+	state.frames_since_redraw += num_frames;
+}
+
+function OnAnimationFrame() {
+	Update();
+	if (state.frames_since_redraw <= 0) {
+		requestAnimationFrame(OnAnimationFrame);
+		return;
+	}
+	state.frames_since_redraw = 0;
 
 	UpdateScoreDisplay(state, /*force_update=*/false);
 
@@ -450,14 +463,26 @@ function Update() {
 	}
 	if (state.update_buff_display) {
 		UpdateBuffDisplay(state);
-		ActiveMachine(state).UpdateHyperSystemDisplay(state);
 	}
 	if (state.update_upgrades) {
 		UpdateUpgrades(state);
 	}
-	if (state.update_upgrade_buttons && !IsCollapsed("upgrades")) {
-		UpdateUpgradeButtons(state);
+	if (!IsCollapsed("upgrades")) {
+		if (state.update_upgrade_buttons_all) {
+			UpdateUpgradeButtonsAll(state);
+		}
+		if (state.update_upgrade_buttons_text) {
+			UpdateUpgradeButtonsText(state);
+		}
+		if (state.update_upgrade_buttons_enabled) {
+			UpdateUpgradeButtonsEnabled(state);
+		}
+		if (state.update_upgrade_buttons_visible) {
+			UpdateUpgradeButtonsVisible(state);
+		}
 	}
+
+	requestAnimationFrame(OnAnimationFrame);
 }
 
 function OnClick(event) {
@@ -526,7 +551,9 @@ function OnResize() {
 function Load() {
 	InitMachinesHeader(state);
 	let loaded_save = LoadFromLocalStorage();
-	LoadActiveMachine(state);
+	if (!loaded_save) {
+		LoadActiveMachine(state);
+	}
 	document.getElementById(kTopCanvasLayer).addEventListener("click", OnClick);
 	document.title = kTitleAndVersion;
 	document.getElementById("title_version").innerHTML = kTitleAndVersion;
@@ -542,12 +569,19 @@ function Load() {
 	document.getElementById(other_ver).style.display = "inline-block";
 	DisplayArchivedSaveFileButtons();
 	UpdateDarkMode();
+	UpdateOpalBallUpgradesStyle();
 
 	window.onresize = OnResize;
 
 	Draw(state);
 
-	state.intervals.update = setInterval(Update, kFrameInterval);
+	requestAnimationFrame(OnAnimationFrame);
+
+	// Additional update once per second for when the tab is inactive, to avoid
+	// a giant lag spike trying to catch up when regaining focus after being
+	// inactive for several minutes.
+	state.intervals.update = setInterval(Update, 1000);
+
 	CheckEvents();
 
 	console.log("Hi there! I don't mind if people hack/cheat, but if you make any screenshots, save files, videos, etc. that way, I'd appreciate it if you clearly label them as hacked. Thanks! --Poochy.EXE");
