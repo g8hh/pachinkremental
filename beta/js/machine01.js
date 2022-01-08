@@ -1281,7 +1281,7 @@ class FirstMachine extends PachinkoMachine {
 				text_func: () => "ZONK",
 				on_hit_func: () => {
 					MaybeAddBonusWheelText({
-						text: "*sad trombone*",
+						text: "*悲伤的长号*",
 						pos: kWheelPopupTextPos,
 						color_rgb: kWheelPopupTextColor
 					});
@@ -1518,7 +1518,7 @@ class FirstMachine extends PachinkoMachine {
 			let mult_display = FormatNumberShort(multiplier);
 			MaybeAddScoreText({
 				level: text_level,
-				text: mult_display + "\u00D7 scoring!",
+				text: mult_display + "\u00D7 得分!",
 				pos: text_pos,
 				color_rgb: color_rgb,
 				opacity: PopupTextOpacityForBallType(ball.ball_type_index),

@@ -2030,7 +2030,7 @@ class BumperMachine extends PachinkoMachine {
 			if (ball.combo > 1 && GetSetting("show_combos")) {
 				MaybeAddScoreText({
 					level: popup_text_level,
-					text: "\u00D7" + ball.combo + " combo",
+					text: "\u00D7" + ball.combo + " 组合",
 					pos: new Point(ball.pos.x, ball.pos.y - 10),
 					color_rgb,
 					opacity: popup_text_opacity,
