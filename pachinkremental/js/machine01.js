@@ -1469,7 +1469,7 @@ class FirstMachine extends PachinkoMachine {
 			UpdateSpinCounter();
 			MaybeAddScoreText({
 				level: score_text_level,
-				text: `+${FormatNumberShort(value)} Spins`,
+				text: `+${FormatNumberShort(value)} 旋转`,
 				pos: text_pos,
 				color_rgb: color_rgb,
 				opacity: PopupTextOpacityForBallType(ball.ball_type_index),
