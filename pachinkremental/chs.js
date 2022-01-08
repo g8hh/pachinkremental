@@ -235,7 +235,7 @@ var cnItems = {
     "Spiral balls": "螺旋球",
     "Spiral Balls": "螺旋球",
     "Ultimate Balls": "终极球",
-    "Ultimate balls have all the benefits of Opal balls, plus they never break their combo. Each type of Ultimate ball has its own special trait.": "Ultimate 球具有 Opal 球的所有优点，而且它们永远不会破坏组合。 每种终极球都有自己的特殊特性。",
+    "Ultimate balls have all the benefits of Opal balls, plus they never break their combo. Each type of Ultimate ball has its own special trait.": "终极 球具有 蛋白石 球的所有优点，而且它们永远不会破坏组合。 每种终极球都有自己的特殊特性。",
     "Unlock Rubber Band Balls": "解锁橡皮筋球",
     "Unlock Spiral Balls": "解锁螺旋球",
     "": "",
