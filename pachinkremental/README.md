@@ -44,11 +44,6 @@ I plan to archive the last version before any update that significantly nerfs pr
 
 **Caution: Spoilers below!**
 
-### v2.1.0-beta (2022-03-08)
-* Add a speedrun timer.
-* For stats and speedrun timer purposes, new save files don't count as started until you drop your first ball.
-* Fix a bug where saving before dropping your first ball then reloading causes the welcome message to disappear prematurely.
-
 ### v2.0.16 (2022-01-18)
 * Fix non-integer values between 1,000 and 10,000 being displayed in scientific notation when Notation is set to 漢字.
 
@@ -65,17 +60,12 @@ I plan to archive the last version before any update that significantly nerfs pr
 * Fix an off-by-one bug when computing how many cells of the Spiral Power meter should be lit.
 
 ### v2.0.12 (2021-11-24)
-* Refactor code for machine-specific stats to make it easier to add new ones.
+* Refactor code for options and machine-specific stats to make it easier to add new ones.
 * Add stat for points earned by the Bonus Wheel in the Basic machine.
 * Reorder the Gemstone ball stats in the Bumpers machine to match the order of the balls in the upgrades menu.
 * Fix a bug where some stats took a while to re-appear in the Stats panel after switching back to a previously played machine.
 * Fix a hit rate of 0 showing as "NaN" for bumpers.
-
-### v2.0.11-beta (2021-11-24)
 * Fix top-level collapsible headers (Upgrades, Machines, Stats, and Options) not restoring to their saved collapsed/open states when loading a save file.
-
-### v2.0.10-beta (2021-11-22)
-* Refactor code for options to make it easier to add new ones.
 
 ### v2.0.9 (2021-11-22)
 * Make the board glow based on Hyper System and Overdrive status. This can be turned off in the options.
@@ -108,254 +98,44 @@ I plan to archive the last version before any update that significantly nerfs pr
 ### v2.0.1 (2021-11-11)
 * Adjust buttons for Rubber Band Balls and Spiral Balls to make the text more readable.
 
-### v1.15.2-beta (2021-11-11)
-* Fix pop-up text for board upgrades.
+### v2.0.0 (2021-11-11)
+* **Major new feature: A second machine!**
+* Minor nerf: Rate-limit manual drops so that hypertapping/mashing the mouse button doesn't become the optimal strategy.
+* QoL improvements:
+	* Hold Shift to buy as many levels of an upgrade as you can, in one click.
+	* Add alternate non-animated style for Opal ball upgrade buttons, toggleable in the options.
+	* Shrink buttons for maxed upgrades, with an option to revert to the old behavior and keep them at full size.
+	* Save file now saves which collapsible headers are collapsed, and will restore them to their previous state when loading or switching between machines.
+	* Adjust pop-up text color when buying Point Multiplier upgrade in dark mode.
+	* Add option to apply opacity settings to pop-up text.
+	* Add engineering and 漢字 (Japanese kanji) notations.
+	* Add extra protections against save file corruption.
+	* Minor improvements to the way the game handles a corrupted save file.
+* Stats panel improvements:
+	* Add stats to track points scored by each ball type, both all-time and in the last 5/15/60 seconds.
+	* Add toggle in stats panel to show how often each target or slot is hit.
+	* Show time since save file was started and time taken (since the save file was started) to max each machine.
+	* Add stats for longest-lasting Beach Ball and most rotations by a Beach Ball.
+* Massive under-the-hood refactor of the game engine, including plenty of performance optimizations:
+	* Optimize the physics engine to reduce memory churn there.
+	* Use object pooling to reduce memory churn further.
+	* Optimize the code for rendering Beach Balls, in particular caching the color palette.
+	* Improve performance by being smarter about what parts of upgrade buttons need to be updated, instead of re-rendering everything every time something changes.
+* Bug fixes:
+	* Require buying Better Ball Drops 2 before showing Better Ball Drops 3, and likewise buying 3 before showing 4.
+	* Fix Auto-Spin making the "Spin the wheel!" button flicker.
+	* Fix upgrade tooltips sometimes going partially off-screen.
+* Other minor adjustments:
+	* Add invisible walls above the sides of the board, so that if a ball bounces wildly off a bumper and over one of the top corner pegs, it'll bounce back into play instead of simply despawning due to going out of bounds.
+	* Keep the board on-screen when scrolling down, if enough headers are expanded to exceed the height of the screen.
+	* Move the Gold Balls upgrades above Bonus Wheel upgrades in the Basic machine, now that shrinking maxed upgrade buttons means Board, Auto-Drop and Gold Balls upgrades can fit neatly in one row on a standard HD display (1360x768 or 1366x768).
+	* Trim trailing zeros in significand in scientific notation.
+	* Change the look of the "Spin the wheel!" button.
+	* Add a modal for when you max out a machine, to make it a bit more clear that the next step is to move on to the next machine.
 
-### v1.15.1-beta (2021-11-08)
-* Optimize the code for rendering Beach Balls and Rubber Band Balls.
-* Improve performance by being smarter about what parts of upgrade buttons need to be updated, instead of re-rendering everything every time something changes.
-
-### v1.15.0-beta (2021-11-07)
-* 3 new Overdrive upgrades.
-* Spiral Balls now glow green when they generate Spiral Power. The more Spiral Power they're generating, the stronger the glow.
-* Beach Balls, Rubber Band Balls, and Spiral Balls are now grouped into Ultimate Balls, and unlocking one sharply increases the cost of unlocking the others, like Gemstone Balls.
-* Nerf: Raised the price of OD Rainbow UFO.
-
-### v1.14.6-beta (2021-10-29)
-* Adjust the look of the Spiral Power meter a little bit.
-
-### v1.14.5-beta (2021-10-28)
-* Add an effect for when Spiral Power is above 100% with Pierce the Heavens.
-* Slight buff: Without the Pierce the Heavens upgrade, excess Spiral Power generated past 100% is stored into an invisible power bank that's automatically used to offset decay, up to 2%. (Spiral Power stored in the power bank also decays.) This should make the meter flicker between 100% and 99.xx% less often.
-
-### v1.14.4-beta (2021-10-27)
-* Change the Spiral Power meter into a spiral shape.
-
-### v1.14.3-beta (2021-10-26)
-* Add a background for Spiral Ball upgrade buttons.
-* Add a new ripple effect for Spiral Balls as well.
-
-### v1.14.2-beta (2021-10-25)
-* Optimize the Spiral Ball rendering code a bit. It was previously allocating and freeing memory so much that it single-handedly forced the JS engine's garbage collector to work twice as hard. Oops.
-* Also optimize the physics engine to reduce memory churn there, too.
-* Use object pooling to reduce memory churn further. I've been procrastinating on this one for way too long.
-
-### v1.14.1-beta (2021-10-24)
-* New upgrade: Giga Drill Break
-* Reduce the cost of Pierce the Heavens, but require having reached 100% Spiral Power at least once to unlock it.
-* Fix Spiral Ball tooltip to include the fact that they never break their combo.
-* Make the "Longest-lasting ball with the Ruby Ball bonus" show the time to 2 decimal places instead of rounding to the nearest second.
-* Add a modal for when you max out a machine, to make it a bit more clear that the next step is to move on to the next machine.
-
-### v1.14.0-beta (2021-10-19)
-* New ball type: Spiral Ball!
-* Under-the-hood refactor of the rendering code for Beach Balls and Rubber Band Balls.
-
-### v1.13.2-beta (2021-10-18)
-* Bugfix: Fix Rubber Band Balls looking slightly weird in medium and low quality modes.
-* Under-the-hood refactor of some of the stats display code.
-
-### v1.13.1-beta (2021-10-03)
-* New upgrade: OD ↑↑↓↓←→←→BA
-* Bumpers machine now shows remaining Hyper System time to tenths of a second.
-* Re-order Board upgrades in Bumpers machine to go by progression.
-
-### v1.13.0-beta (2021-10-03)
-* New upgrade: OD Heaven's Time
-
-### v1.12.4-beta (2021-09-21)
-* New upgrade: Hyper Recharge
-* Add alternate non-animated style for Opal ball upgrade buttons, toggleable in the options.
-
-### v1.12.3-beta (2021-09-12)
-* Added a bunch more stats:
-	* Basic machine:
-		* Longest-lasting Beach Ball
-		* Most rotations by a Beach Ball
-	* Bumpers machine:
-		* Longest-lasting ball with the Ruby Ball bonus
-		* Most target hits by a ball with the Sapphire Ball bonus
-		* Most bumper hits by a ball with the Emerald Ball bonus
-		* Most bounces by a Rubber Band Ball
-
-### v1.12.2-beta (2021-09-12)
-* Fix a bug where holding Shift with significantly more than enough points to max an upgrade could cause that upgrade's button to display an incorrect value and cost, above the max value and the cost needed to max it.
-
-### v1.12.1-beta (2021-09-12)
-* Hit rate stats feature now shows how many balls have been counted.
-* Save file now saves whether hit rate stats are turned on.
-* Bumpers machine buffs:
-	* Reduced cost of unlocking Beach and Rubber Band balls.
-	* Reduced cost of Rubber Band Ball Value upgrade and increased initial and maximum values.
-
-### v1.12.0-beta (2021-09-11)
-* New ball type: Rubber band balls! They're very bouncy, and increase in value with each bounce.
-
-### v1.11.6-beta (2021-09-10)
-* New UI feature: Add toggle in stats panel to show how often each target or slot is hit.
-
-### v1.11.5-beta (2021-09-08)
-* New QoL feature: Hold Shift to buy as many levels of an upgrade as you can, in one click.
-* Bumpers machine adjustments:
-	* Fixed "Next upgrade reveal at:" hints.
-	* Nerf: Increased prices of Add Score Targets, unlocking ball types starting from gemstone balls, and gemstone ball rates besides Opal.
-	* Nerf: The Hyper System must be activated once before its multiplier can be upgraded.
-	* OD Lunatic Red Eyes, OD Green-Eyed Monster, and OD Perfect Freeze now only appear once the corresponding gemstone ball's value upgrade is maxed out, and those 3 upgrades are now prerequisites for OD Rainbow UFO to appear. (Not counting this as a nerf, since it's highly unlikely that a player would be able to afford the upgrades before satisfying the new prerequisites anyway.)
-
-### v1.11.4-beta (2021-07-22)
-* Fix frozen Hyper System display remaining on screen when switching from Bumpers machine back to Basic.
-
-### v1.11.3-beta (2021-07-15)
-* Add some missing next upgrade hints for the Bumpers machine.
-
-### v1.11.2-beta (2021-07-08)
-* Fix clicks in the drop zone being ignored when the page is scrolled down.
-* Add flavor text for Overdrive.
-
-### v1.11.1-beta (2021-07-07)
-* Fix balls acting weird after being transformed from normal to gold in mid-air by the Overdrive Midas upgrade.
-* Adjust gemstone ball description text to mention that they also don't count towards the max balls limit.
-
-### v1.11.0-beta (2021-07-06)
-* Add another Overdrive upgrade.
-* Bugfix: Check that the corresponding gemstone ball type is unlocked before revealing the Overdrive upgrade for it.
-
-### v1.10.1-beta (2021-07-06)
-* Keep the board on-screen when scrolling down, if enough headers are expanded to exceed the height of the screen.
-
-### v1.10.0-beta (2021-06-23)
-* Add Beach Balls to Bumpers machine.
-* Add 3 more Overdrive upgrades.
-* Buff: Reduced costs of Overdrive upgrades.
-* Fix score multiplier display precision flickering between 1 decimal place and rounding to the nearest integer during a Hyper Combo.
-* Add invisible walls above the sides of the board, so that if a ball bounces wildly off a bumper and over one of the top corner pegs, it'll bounce back into play instead of simply despawning due to going out of bounds.
-* Remove an extraneous peg in the right wall of the Bumpers machine.
-
-### v1.9.2-beta (2021-06-19)
-* Fix point value text on score targets not updating when switching notations.
-
-### v1.9.1-beta (2021-06-11)
-* Fix game crashing when trying to load a save file that was saved while Overdrive was active.
-
-### v1.9.0-beta (2021-06-10)
-* Add Overdrive upgrades, which kick in when the Hyper Combo is over 1000 hits.
-
-### v1.8.1-beta (2021-06-07)
-* Fix upgrade tooltips sometimes going partially off-screen.
-* Make the Hyper Combo counter fade out when the Hyper System activation time runs out.
-
-### v1.8.0-beta (2021-06-06)
-* New Hyper System upgrade: Hyper Combo. The more hits scored in a single Hyper activation, the higher the multiplier goes!
-* Minor nerf: Rate-limit manual drops so that hypertapping/mashing the mouse button during a Hyper activation doesn't become the optimal strategy.
-
-### v1.7.8-beta (2021-06-02)
-* Fix CSS breaking on collapsible headers when importing a save from v1.1.1 or older directly into v1.7.6 or newer.
-* Show time since save file was started and time taken (since the save file was started) to max each machine in the Stats panel.
-
-### v1.7.7-beta (2021-06-02)
-* Add stats for highest combo and number of times the Hyper System has been activated.
-
-### v1.7.6-beta (2021-06-02)
-* Save file now saves which collapsible headers are collapsed, and will restore them to their previous state when loading or switching between machines.
-* Fix the "New!" notice always appearing in the Upgrades header if it's collapsed when switching machines, even when switching to a machine where none of the upgrades are newly revealed.
-
-### v1.7.5-beta (2021-06-01)
-* Buff: Make Bumper Value increase twice as fast after 500, since its cost-effectiveness becomes pretty rubbish in the late game. (It's still pretty underpowered in the late game, just less so.)
-* Add stats for points earned in the last 5/15/60 seconds by ball type.
-* Fix stats panel displaying "Highest buff multiplier: ×0" when switching machines from Basic to Bumpers.
-
-### v1.7.4-beta (2021-05-30)
-* Add extra protections against save file corruption.
-* Minor improvements to the way the game handles a corrupted save file.
-
-### v1.7.3-beta (2021-05-30)
-* Refactored the code and optimized the engine a bit.
-* Fix "Next upgrade reveal at:" messages for Bumpers machine.
-
-### v1.7.2-beta (2021-05-29)
-* Fix popup text not appearing when buying Point Multiplier or Center Slot Value upgrades.
-* Add engineering and 漢字 (Japanese kanji) notations.
-
-### v1.7.1-beta (2021-05-28)
-* Add upgrades for the Hyper System's score multiplier and charge rate.
-
-### v1.7.0-beta (2021-05-27)
-* Bumpers machine updates:
-	* Add an upgrade to combos which makes the base value accumulate with each hit.
-	* New feature: Hyper System, which is charged up by combos and awards a 10x score buff for 15 seconds when fully charged.
-* Change the look of the "Spin the wheel!" button.
-* Fix Auto-Spin making the "Spin the wheel!" button flicker.
-
-### v1.6.0-beta (2021-05-25)
-* Bumpers machine updates:
-	* New feature: Combos!
-	* Increase max Bumper Value and lower the cost of upgrading it.
-	* Add upgrades that increase the value of the middle score targets and the bottom slots.
-* Change "Pop-up text for opacity 0 balls" option to "Apply opacity settings to pop-up text", making it apply non-zero opacity settings to pop-up text.
-
-### v1.5.1-beta (2021-05-21)
-* Lower prices for Add Score Targets, Gold Ball Rate, and Gold Ball Value upgrades on Bumpers machine.
-
-### v1.5.0-beta (2021-05-19)
-* Bumpers machine updates:
-	* Buff: Double Ruby ball value increase per second.
-	* Add an upgrade that adds 5 more blue score targets.
-
-### v1.4.7-beta (2021-05-18)
-* Add stats to track points scored by each ball type.
-* Tweak the logic that computes stats for points scored in the last 5/15/60 seconds to (hopefully) make the time window cutoffs more accurate when lagging or inactive.
-
-### v1.4.6-beta (2021-05-15)
-* Add option to hide pop-up text for balls set to opacity 0.
-
-### v1.4.5-beta (2021-05-13)
-* Reduce price of Opal Ball Rate upgrade in Bumper machine.
-
-### v1.4.4-beta (2021-05-12)
-* Shrink buttons for maxed upgrades, with an option to revert to the old behavior and keep them at full size.
-* Move the Gold Balls upgrades above Bonus Wheel upgrades in the Basic machine, now that shrinking maxed upgrade buttons means Board, Auto-Drop and Gold Balls upgrades can fit neatly in one row on a standard HD display (1360x768 or 1366x768).
-
-### v1.4.3-beta (2021-05-12)
-* Adjust bumper physics so that when a bumper sends a ball flying into another bumper, the ball doesn't ricochet as wildly off the second bumper.
-* Adjust pop-up text color when buying Point Multiplier upgrade in dark mode.
-* Reduce gold ball value upgrade price for the Bumpers machine.
-* Tweak gemstone ball note to say that "each" gemstone ball unlocked increases the cost of the others.
-* Fix Better Multi-Spin not working (broken in v1.2.0-beta).
-
-### v1.4.2-beta (2021-05-11)
-* Reduce a bunch of upgrade prices for the Bumpers machine.
-* Fix some wheel spaces appearing blank before the first spin after switching machines.
-
-### v1.4.1-beta (2021-05-10)
-* Fix some targets not updating their text when toggling scientific notation.
-* Trim trailing zeros in significand in scientific notation.
-
-### v1.4.0-beta (2021-05-10)
-* Bumpers machine updates:
-	* Add gemstone balls.
-	* Reduce costs for some upgrades.
-	* Bugfix: Points from bumpers are now multiplied by the Point Multiplier upgrade.
-* Adjust physics engine to make it much less likely for a ball to clip through a peg after being slingshotted at high velocity by a bumper.
-* Fix bug where balls would teleport a couple pixels away from a bumper immediately after hitting it.
-
-### v1.3.3-beta (2021-05-09)
-* Tweak Bumpers machine layout so that the top center target isn't so unreasonably hard to hit.
-
-### v1.3.2-beta (2021-05-09)
+### v1.1.2 (2021-05-09)
 * Make bonus wheel pop-up text easier to read.
-
-### v1.3.1-beta (2021-05-09)
-* Fix pop-up text not appearing when buying Point Multiplier upgrade.
-* Fix score display being momentarily frozen on the old save file's value when importing a save file.
-
-### v1.3.0-beta (2021-05-09)
-* **Major new feature: Multiple machines!**
-	* This update includes a 2nd machine, but it's incomplete and not balanced yet.
 * Fix 8-ball upgrade buttons still having white text when disabled in light mode.
-
-### v1.2.0-beta (2021-05-04)
-* Under-the-hood refactor of the game engine in preparation for a planned future update.
-* Bugfix: Require buying Better Ball Drops 2 before showing Better Ball Drops 3, and likewise buying 3 before showing 4.
 
 ### v1.1.1 (2021-05-03)
 * Fix drop zone being drawn 5 pixels too high in April Fools mode.

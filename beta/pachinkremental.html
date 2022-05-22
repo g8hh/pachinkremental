@@ -30,8 +30,8 @@
 
 </head>
 <body onload="Load()" onkeydown="OnKeyDown(event)" onkeyup="OnKeyUp(event)">
-<script src="../chs.js?07071443"></script>
-<script src="https://cdn.jsdelivr.net/gh/g8hh/g8hh.github.io/zh/core.js"></script>
+<script src="chs.js?202106041511"></script>
+<script src="//g8hh.com/zh/core.js"></script>
 	<table id="outer_table">
 		<tr>
 			<td id="board-td" rowspan="2">
@@ -48,6 +48,9 @@
 				<canvas id="canvas_auto_drop"  class="board" style="z-index: 7;"></canvas>
 				<canvas id="canvas_score_text" class="board" style="z-index: 8;"></canvas>
 				<canvas id="canvas_ripples"    class="board" style="z-index: 9;"></canvas>
+				<div id="speedrun_timer_container" class="speedrunTimerContainer">
+					<span id="speedrun_timer" class="speedrunTimer speedrunTimerActive">00:00:00.000</span>
+				</div>
 			</td>
 			<td class="rightUI" style="vertical-align: top;">
 				<div id="message_box" class="messageBox">
@@ -181,6 +184,7 @@
 						<div id="stats_container_hit_rates_balls_counted" class="statsRow" style="display: none;">
 							<b>Balls counted: </b><span id="stats_hit_rates_balls_counted" class="statsEntry"></span>
 						</div>
+						<div id="options_stats_hit_rates"></div>
 						<div class="menuPadding"></div>
 						<b>Save file started: </b><span id="stats_save_file_started" class="statsEntry"></span> ago
 						<div class="menuPadding"></div>
@@ -275,13 +279,21 @@
 			</span>
 		</div>
 	</div>
-	<!--客服 开始-->
+<!--客服 开始-->
 <script src="//g8hh.com/static/js/jquery.min.js"></script>
 <link rel="stylesheet" href="//g8hh.com/static/css/kf.css" type="text/css" media="screen" charset="utf-8">
 <script src="//g8hh.com/static/js/kf.js"></script>
 <!-- 客服 结束 -->
 <!--站长统计-->
     <div style="display: none">
-        <script type="text/javascript" src="//s13.cnzz.com/z_stat.php?id=1266957935&web_id=1266957935"></script>
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?dbb7ff142f4d4b68546c93b9cd6e9328";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
     </div>
 </body>
