@@ -44,6 +44,17 @@ I plan to archive the last version before any update that significantly nerfs pr
 
 **Caution: Spoilers below!**
 
+### v2.1.0-beta (2022-03-08)
+* Add a speedrun timer.
+* For stats and speedrun timer purposes, new save files don't count as started until you drop your first ball.
+* Fix a bug where saving before dropping your first ball then reloading causes the welcome message to disappear prematurely.
+
+### v2.0.16 (2022-01-18)
+* Fix non-integer values between 1,000 and 10,000 being displayed in scientific notation when Notation is set to 漢字.
+
+### v2.0.15 (2022-01-11)
+* Add option to automatically reset hit rate stats when changing the Auto-Drop location.
+
 ### v2.0.14 (2021-12-03)
 * More performance optimizations to reduce the amount of repainting the browser has to do.
 * Migrate to `requestAnimationFrame` and `performance.now()` for timing. I've been procrastinating on this one for way too long as well.

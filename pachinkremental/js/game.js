@@ -1,4 +1,4 @@
-const kVersion = "v2.0.14";
+const kVersion = "v2.0.16";
 const kTitleAndVersion = "Pachinkremental " + kVersion;
 
 const kFrameInterval = 1000.0 / kFPS;
@@ -510,6 +510,9 @@ function OnClick(event) {
 		if (machine.AutoDropOn()) {
 			save_data.auto_drop_pos = pos;
 			state.redraw_auto_drop = true;
+			if (GetSetting("auto_reset_hit_rates")) {
+				ResetHitRates();
+			}
 		}
 	}
 }
