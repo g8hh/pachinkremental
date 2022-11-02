@@ -517,8 +517,8 @@ var cnPrefix = {
     "Combos: ": "组合: ",
     "Spins: ": "旋转: ",
     "Multi‑Spin: ×": "批量旋转: ×",
-    "": "",
-    "": "",
+    "Speedrun timer: ": "速通计时器：",
+    "Auto reset hit rates when changing Auto-Drop location: ": "更改自动放置位置时自动重置命中率：",
     "": "",
 }
 
