@@ -705,6 +705,32 @@ class BumperMachine extends PachinkoMachine {
 		pegs.push(new Point(grid_cols[17], y));
 		y -= kVerticalSpacing;
 		even_grid_row(y);
+
+		/*
+		const kPortalRadius = kHorizontalSpacing / 2.0 - kPegRadius;
+		let left_portal = new Portal({
+			machine: this,
+			pos: new Point(grid_cols[9], y),
+			draw_radius: kPortalRadius,
+			color: "0, 255, 255",
+			id: "portal_left",
+			active: true
+		});
+		let right_portal = new Portal({
+			machine: this,
+			pos: new Point(grid_cols[13], y),
+			draw_radius: kPortalRadius,
+			color: "0, 255, 255",
+			id: "portal_right",
+			active: true
+		});
+		left_portal.SetDestination(right_portal);
+		right_portal.SetDestination(left_portal);
+		let portal_sets = Array(0);
+		portal_sets.push(new TargetSet([left_portal]));
+		portal_sets.push(new TargetSet([right_portal]));
+		*/
+
 		y -= kVerticalSpacing;
 		odd_grid_row(y);
 		y -= kVerticalSpacing;
@@ -717,7 +743,15 @@ class BumperMachine extends PachinkoMachine {
 			new Rectangle(min_drop_x, max_drop_x, min_drop_y, max_drop_y)
 		];
 
-		return new PegBoard(kWidth, kHeight, pegs, drop_zones, target_sets, bumper_sets);
+		return new PegBoard({
+			width: kWidth,
+			height: kHeight,
+			pegs: pegs,
+			drop_zones: drop_zones,
+			target_sets: target_sets,
+			bumper_sets: bumper_sets,
+			//portal_sets: portal_sets,
+		});
 	}
 
 	UpdateScoreTargetSet(target_set, base_values, multiplier) {
