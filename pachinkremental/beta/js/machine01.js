@@ -3,7 +3,7 @@ const kFirstMachineID = "first";
 const kFirstMachineBallTypes = [
 	//          | id |    name    | display_name |      physics_params       | inner_color | outer_color | ripple_color_rgb |
 	kNormalBallType,
-	new BallType(1,   "gold",      "Gold ",       kPhysicsParams.normal,     "#FFD700",    "#AA8F00",    "170,143,  0"    ),
+	new BallType(1,   "gold",      "Gold ",       kPhysicsParams.normal,     "#FFC400",    "#775B00",    "170,130,  0"    ),
 	new BallType(2,   "ruby",      "Ruby ",       kPhysicsParams.normal,     "#FBB",       "#F33",       "255, 48, 48"    ),
 	new BallType(3,   "sapphire",  "Sapphire ",   kPhysicsParams.normal,     "#BBF",       "#33F",       " 48, 48,255"    ),
 	new BallType(4,   "emerald",   "Emerald ",    kPhysicsParams.normal,     "#BFB",       "#3F3",       " 48,255, 48"    ),
@@ -73,8 +73,8 @@ class CenterSlotTarget extends ScoreTarget {
 		});
 	}
 
-	OnHit(ball) {
-		super.OnHit(ball);
+	OnHit(ball, timestamp) {
+		super.OnHit(ball, timestamp);
 		this.machine.OnCenterSlotHit(ball);
 	}
 }
@@ -93,13 +93,13 @@ class SpinTarget extends Target {
 		});
 	}
 
-	OnHit(ball) {
+	OnHit(ball, timestamp) {
 		let text_pos = new Point(ball.pos.x, ball.pos.y);
 		if (
 			this.machine.HasTurquoiseSpecial(ball.ball_type_index) &&
 			this.machine.IsUnlocked("turquoise_synergy")
 		) {
-			this.machine.AwardPoints(this.machine.CenterSlotValue(), ball);
+			this.machine.AwardPoints(this.machine.CenterSlotValue(), ball, null);
 			text_pos.y -= 10;
 		}
 		this.machine.AwardSpins(ball, text_pos);
@@ -764,7 +764,8 @@ class FirstMachine extends PachinkoMachine {
 				machine: this,
 				ball_type: this.ball_types[kFirstMachineBallTypeIDs.SAPPHIRE],
 				ball_description:
-					"Sapphire balls are worth the same as a gold ball, plus the gold ball multiplier is also applied to the number of bonus wheel spins earned by sapphire balls.",
+					'The Gold Ball Value multiplier is applied to both points and spins earned by sapphire balls.' +
+					'<div class="small">Example: If Gold Ball Value is at 3×, then sapphire balls earn 3× points and 3× spins.</div>',
 				cost_func: this.GemstoneBallUnlockCost,
 				visible_func: () => {
 					return this.ShouldDisplayGemstoneBallUpgrades();
@@ -786,7 +787,8 @@ class FirstMachine extends PachinkoMachine {
 				id: "sapphire_ball_exponent",
 				name: "Sapphire Exponent",
 				category: "sapphire_balls",
-				description: "Increases the exponent on the gold ball value multiplier for sapphire balls. Note: The number of spins earned per sapphire ball is rounded down to the nearest whole number.",
+				description: "Exponentiates the number of spins earned by sapphire balls. Note: The number of spins earned per hit is rounded down to the nearest whole number." +
+				'<div class="small">Example: If Gold Ball Value is at 3× and Sapphire Exponent is at 2.0, then sapphire balls earn 3× points and 9× spins.</div>',
 				cost_func: level => 1e15 * Math.pow(5, level),
 				value_func: level => (level / 10.0) + 1,
 				max_level: 20,
@@ -802,7 +804,8 @@ class FirstMachine extends PachinkoMachine {
 				machine: this,
 				ball_type: this.ball_types[kFirstMachineBallTypeIDs.EMERALD],
 				ball_description:
-					"Points scored by emerald balls are multiplied by the square of the gold ball multiplier.",
+					'Points scored by emerald balls are multiplied by the square of the Gold Ball Value multiplier.' +
+					'<div class="small">Example: If Gold Ball Value is at 3×, then emerald balls earn 9× points.</div>',
 				cost_func: this.GemstoneBallUnlockCost,
 				visible_func: () => {
 					return this.ShouldDisplayGemstoneBallUpgrades();
@@ -824,7 +827,7 @@ class FirstMachine extends PachinkoMachine {
 				id: "emerald_ball_exponent",
 				name: "Emerald Exponent",
 				category: "emerald_balls",
-				description: "Increases the exponent on the gold ball value multiplier for emerald balls.",
+				description: "Increases the exponent on the Gold Ball Value multiplier for emerald balls.",
 				cost_func: level => 1e15 * Math.pow(25, level),
 				value_func: level => (level / 10.0) + 2,
 				max_level: 10,
@@ -1371,7 +1374,7 @@ class FirstMachine extends PachinkoMachine {
 		return new BonusWheel(this, spaces);
 	}
 
-	AwardPoints(base_value, ball) {
+	AwardPoints(base_value, ball, machine_specific_params) {
 		let total_value = base_value;
 		let color_rgb = "0,128,0";
 		if (this.IsScoreBuffActive()) {

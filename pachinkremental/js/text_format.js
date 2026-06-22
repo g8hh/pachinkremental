@@ -45,13 +45,18 @@ function FormatNumberEngineeringNotationLong(num) {
 }
 
 const kKanji =
-	["", "万", "億", "兆", "京", "垓", "秭", "穣", "溝", "澗", "正", "載", "極"];
+	["", "万", "億", "兆", "京", "垓", "秭", "穣", "溝", "澗", "正", "載", "極", "恒河沙", "阿僧祇", "那由他", "不可思議", "無量大数"];
 
 function FormatNumberShortKanji(num) {
 	let suffix_index = Math.floor(Math.log10(num) / 4);
 	if (suffix_index == 0) {
-		return FormatSmallNumberShort(num);
-	} else if (suffix_index >= kKanji.length) {
+		if (num < 1000) {
+			return FormatSmallNumberShort(num);
+		} else {
+			return num.toFixed(0);
+		}
+	} else if (suffix_index >= 13) {
+		// Revert to scientific notation because "1000阿僧祇" won't fit into a target.
 		return FormatNumberScientificNotation(num, /*trim_zeros=*/true);
 	}
 	let prefix = Math.round(num / Math.pow(10000, suffix_index));
@@ -278,8 +283,36 @@ function FormatNumberLong(num) {
 	}
 }
 
+function FormatSpeedrunTimer(duration_ms, show_ms) {
+	console.assert(duration_ms >= 0);
+	let x = Math.round(duration_ms);
+	let result = "";
+	if (show_ms) {
+		let ms = x % 1000;
+		result = "." + ZeroPad(ms, 3);
+	}
+	x = Math.floor(x / 1000);
+	let secs = x % 60;
+	x = Math.floor(x / 60);
+	result = ZeroPad(secs, 2) + result;
+	let mins = x % 60;
+	x = Math.floor(x / 60);
+	result = ZeroPad(mins, 2) + ":" + result;
+	if (x <= 0) {
+		return result;
+	}
+	let hours = x % 24;
+	x = Math.floor(x / 24);
+	result = ZeroPad(hours, 2) + ":" + result;
+	if (x <= 0) {
+		return result;
+	}
+	result = x + "d " + result;
+	return result;
+}
+
 function FormatDurationLong(duration_ms, show_ms) {
-	console.assert(duration_ms > 0);
+	console.assert(duration_ms >= 0);
 	let x = Math.round(duration_ms);
 	let result = "";
 	if (show_ms) {

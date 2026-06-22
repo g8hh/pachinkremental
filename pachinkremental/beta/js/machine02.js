@@ -3,7 +3,7 @@ const kBumperMachineID = "bumper";
 const kBumperMachineBallTypes = [
 	//          | id |    name     | display_name  |      physics_params      | inner_color | outer_color | ripple_color_rgb |
 	kNormalBallType,
-	new BallType(1,   "gold",       "Gold ",        kPhysicsParams.normal,     "#FFD700",    "#AA8F00",    "170,143,  0"    ),
+	new BallType(1,   "gold",       "Gold ",        kPhysicsParams.normal,     "#FFC400",    "#775B00",    "170,130,  0"    ),
 	new BallType(2,   "ruby",       "Ruby ",        kPhysicsParams.normal,     "#FBB",       "#F33",       "255, 48, 48"    ),
 	new BallType(3,   "sapphire",   "Sapphire ",    kPhysicsParams.normal,     "#BBF",       "#33F",       " 48, 48,255"    ),
 	new BallType(4,   "emerald",    "Emerald ",     kPhysicsParams.normal,     "#BFB",       "#3F3",       " 48,255, 48"    ),
@@ -962,7 +962,7 @@ class BumperMachine extends PachinkoMachine {
 				name: "Unlock Combos",
 				category: "combos",
 				description:
-					"Unlocks combos. A ball that hits multiple bumpers and/or score targets in quick succession starts a combo, which multiplies the point values of everything hit in the combo. The 2nd hit is worth 2× points, the 3rd thing hit is 3×, and so on.",
+					"Unlocks combos. A ball that hits multiple bumpers and/or score targets in quick succession starts a combo, which multiplies the point values of each hit in the combo. The 2nd hit is worth 2× points, the 3rd hit is 3×, and so on.",
 				cost: 10000,
 				visible_func: () => this.GetUpgradeLevel("bumper_value") > 0,
 				on_buy: UpdateOptionsButtons
@@ -1784,16 +1784,19 @@ class BumperMachine extends PachinkoMachine {
 
 		if (this.IsUnlocked("unlock_spiral_balls")) {
 			const kMaxSpiralMultiplier = 10;
+			let spiral_decay_rate = 0.3 / kPhysicsFPS;
 			if (this.overdrive && this.IsUnlocked("overdrive_fight_the_power")) {
-				save_data.spiral_power *= 0.995;
-			} else {
-				save_data.spiral_power *= 0.99;
+				spiral_decay_rate /= 2.0;
 			}
+			save_data.spiral_power *= (1.0 - spiral_decay_rate);
 			const spiral_balls =
 				state.balls_by_type[kBumperMachineBallTypeIDs.SPIRAL];
+			const kSpiralFactor = 30.0 / kPhysicsFPS;
+			let total_rotation = 0;
 			for (let i = 0; i < spiral_balls.length; ++i) {
-				save_data.spiral_power += Math.abs(spiral_balls[i].omega);
+				total_rotation += Math.abs(spiral_balls[i].omega);
 			}
+			save_data.spiral_power += total_rotation * kSpiralFactor;
 			let meter_fraction = save_data.spiral_power / this.max_spiral_power;
 			if (!this.IsUnlocked("pierce_the_heavens")) {
 				if (save_data.spiral_power > this.max_spiral_power) {
@@ -1844,7 +1847,7 @@ class BumperMachine extends PachinkoMachine {
 		const kCenterXY = kSpiralMeterSize / 2;
 		const kLineWidth = 2;
 		let canvas = GetCanvasLayer("spiral2");
-		canvas.width  = kSpiralMeterSize;
+		canvas.width = kSpiralMeterSize;
 		canvas.height = kSpiralMeterSize;
 		let ctx = canvas.getContext("2d");
 		ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -1955,7 +1958,7 @@ class BumperMachine extends PachinkoMachine {
 		}
 
 		let canvas1 = GetCanvasLayer("spiral1");
-		canvas1.width  = kSpiralMeterSize;
+		canvas1.width = kSpiralMeterSize;
 		canvas1.height = kSpiralMeterSize;
 	}
 
@@ -2029,7 +2032,7 @@ class BumperMachine extends PachinkoMachine {
 		this.last_drawn_spiral_meter_ticks = current_ticks;
 	}
 
-	AwardPoints(base_value, ball) {
+	AwardPoints(base_value, ball, machine_specific_params) {
 		let color_rgb = this.PopupTextColorForBallType(ball.ball_type_index);
 		let popup_text_level = this.PopupTextLevelForBallType(ball.ball_type_index);
 		let popup_text_opacity =

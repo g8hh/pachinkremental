@@ -10,7 +10,9 @@
 	<link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
 
 	<script type="text/javascript" src="js/lib/lz-string.js"></script>
+	<script type="text/javascript" src="js/lib/PlaybackPositionNode.js"></script>
 
+	<script type="text/javascript" src="js/audio.js"></script>
 	<script type="text/javascript" src="js/ball.js"></script>
 	<script type="text/javascript" src="js/board.js"></script>
 	<script type="text/javascript" src="js/canvas.js"></script>
@@ -90,6 +92,8 @@
 					<canvas id="favicon_canvas" width="64" height="64" style="height: 64px; width: 64px;"></canvas>
 					<a id="favicon_link">Save</a>
 					<canvas id="portal_inside_temp" width="64" height="64"></canvas>
+					<div class="messageBox">BGM timestamp: <span id="bgm_timestamp" class="speedrunTimer"></span></div>
+					<div class="messageBox">BGM measure: <span id="bgm_measure" class="speedrunTimer"></span></div>
 				</div>
 				<div id="spiral_power" class="spiralContainer" style="display: none;">
 					<table id="spiral_power_table">
@@ -139,6 +143,15 @@
 						<div class="messageBox">You can switch machines here whenever you like. Each machine has its own separate points, upgrades, and stats. You can only play one machine at a time, but you can always return to a previous machine and pick up where you left off.</div>
 						<div class="menuPadding"></div>
 						<div id="machine_buttons" class="machinesContents"></div>
+						<div class="menuPadding"></div>
+						<div class="messageBox">
+							Shift + Click to start an individual level (IL) speedrun on a machine you've already completed.<br>
+							In an IL speedrun, you start with a brand new copy of the selected machine, and the goal is to max out the machine as quickly as you can.<br>
+							The timer starts when you drop your first ball, and stop when you max all upgrades that can be maxed.<br>
+							Progress during an IL speedrun will not be saved. Only your personal best (PB) time per machine will be saved.<br>
+							You can abandon an IL speedrun at any time by switching machines again.<br>
+							Your previous progress will not be affected, and you can pick up where you left off when you exit IL speedrun mode.
+						</div>
 					</div>
 				</div>
 				<div id="stats_container" class="statsContainer">
@@ -220,6 +233,17 @@
 						<button type="button" class="optionButton"
 								id="button_import_save" onclick="ImportSave()">Import save file</button>
 						<div id="options_misc" class="optionsContents"></div>
+						<div id="options_sounds" class="optionsContents messageBox" style="display: none;">
+							<b>Volume:</b>
+							<div id="bgm_volume_wrapper" class="opacitySlider" style="display: block;">
+								<input type="range" min="0" max="100" step="5" onchange="UpdateBGMVolume(this)" value="50" id="bgm_volume" name="bgm_volume">
+								<label for="bgm_volume" id="bgm_volume_label">
+									<button type="button" class="optionButton"
+										id="button_mute_bgm" onclick="ToggleMuteBGM()">🔊</button>
+									BGM
+								</label>
+							</div>
+						</div>
 						<div id="options_opacity" class="optionsContents messageBox" style="display: inline-block;"></div>
 						<div id="options_favicon" class="optionsContents messageBox" style="display: inline-block;"></div>
 						<div id="options_archived_save_files"></div>
@@ -268,6 +292,36 @@
 				As a reward, you've unlocked a new machine! Check it out in the Machines menu, between Upgrades and Stats.
 				<br><br>
 				By the way, it's been <span id="machine_maxed_time" class="speedrunTimerSplit"></span> since you started playing on this save file. You can check how long it took you to reach this milestone, as well as any other milestones you've reached, in the Stats menu.
+			</span>
+		</div>
+	</div>
+	<div id="il_speedrun_complete_modal" class="modal">
+		<div id="il_speedrun_complete_modal_content" class="modalContent">
+			<span class="modalCloseButton" onmousedown="CloseModal('il_speedrun_complete_modal')">&#xD7</span>
+			<span style="text-align: center; vertical-align: middle;">
+				<span class="prismaticText"><b>Time!</b></span>
+				<br><br>
+				You maxed the <span id="il_speedrun_complete_machine_name"></span> machine in <span id="il_speedrun_complete_time" class="speedrunTimerSplit"></span>!
+				<br><br>
+				<span id="il_speedrun_new_pb" class="prismaticText">That's a new personal best! Congratulations!</span>
+			</span>
+		</div>
+	</div>
+	<div id="music_prompt_modal" class="modal">
+		<div id="music_prompt_modal_content" class="modalContent">
+			<span style="text-align: center; vertical-align: middle;">
+				<span class="prismaticText messageBoxLarge">𝄞 ♩ ♫</span>
+				<br><br>
+				This machine has music! Do you want to enable sounds?
+				<br><br>
+				You can adjust the volume or change this setting later in the Options pane.
+				<br><br>
+				(Unfortunately, this prompt will come up every time you load the game, since this is also a hacky workaround for browsers disallowing autoplaying sounds.)
+				<br><br>
+				<button type="button" class="optionButton"
+						id="button_toggle_music" onclick="MusicPromptChoice(false)">🔇 No, mute it.</button>
+				<button type="button" class="optionButton"
+						id="button_toggle_music" onclick="MusicPromptChoice(true)">🔊 Yes, let's hear it!</button>
 			</span>
 		</div>
 	</div>
