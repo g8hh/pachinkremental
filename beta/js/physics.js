@@ -1,4 +1,4 @@
-const kFPS = 30;
+const kPhysicsFPS = 120;
 const kPhysicsParams = {
 	normal: {
 		accel: 500,
@@ -14,31 +14,27 @@ const kPhysicsParams = {
 	},
 };
 
-function CheckForTargetHits(board, ball) {
-	for (let s = 0; s < board.target_sets.length; ++s) {
-		board.target_sets[s].CheckForHit(ball);
-	}
-	for (let s = 0; s < board.bumper_sets.length; ++s) {
-		board.bumper_sets[s].CheckForHit(ball);
-	}
-	for (let s = 0; s < board.long_bumper_sets.length; ++s) {
-		board.long_bumper_sets[s].CheckForHit(ball);
-	}
-	for (let s = 0; s < board.whirlpool_sets.length; ++s) {
-		board.whirlpool_sets[s].CheckForHit(ball);
-	}
-	for (let s = 0; s < board.portal_sets.length; ++s) {
-		board.portal_sets[s].CheckForHit(ball);
+function CheckObjectSetsForHits(object_sets, ball, timestamp) {
+	for (let s = 0; s < object_sets.length; ++s) {
+		object_sets[s].CheckForHit(ball, timestamp);
 	}
 }
 
-function UpdateBalls(balls, board, params) {
-	const kEpsilon = 1e-3 / kFPS;
+function CheckForHits(board, ball, timestamp) {
+	CheckObjectSetsForHits(board.target_sets, ball, timestamp);
+	CheckObjectSetsForHits(board.bumper_sets, ball, timestamp);
+	CheckObjectSetsForHits(board.whirlpool_sets, ball, timestamp);
+	CheckObjectSetsForHits(board.portal_sets, ball, timestamp);
+}
+
+function UpdateBalls(balls, board, params, start_time) {
+	const kEpsilon = 1e-3 / kPhysicsFPS;
 	const k2Pi = Math.PI * 2;
 	const kPegSearchRadius = kPegRadius + kBallRadius;
 	let new_pos = new Point(0, 0);
 	for (let b = 0; b < balls.length; ++b) {
-		let time_to_sim = 1.0 / kFPS;
+		let current_time = start_time;
+		let time_to_sim = 1.0 / kPhysicsFPS;
 		let pos = balls[b].pos;
 		let vel = balls[b].vel;
 		let omega = balls[b].omega;
@@ -55,7 +51,8 @@ function UpdateBalls(balls, board, params) {
 			if (collide_peg == null) {
 				pos.CopyFrom(new_pos);
 				time_to_sim -= time_step;
-				CheckForTargetHits(board, balls[b]);
+				current_time += time_step * 1000.0;
+				CheckForHits(board, balls[b], current_time);
 				continue;
 			}
 			while (time_step >= kEpsilon) {
@@ -69,6 +66,7 @@ function UpdateBalls(balls, board, params) {
 				if (collide_peg == null) {
 					pos.CopyFrom(new_pos);
 					time_to_sim -= time_step;
+					current_time += time_step * 1000.0;
 				}
 			}
 			new_pos.CopyFrom(pos);
@@ -76,6 +74,7 @@ function UpdateBalls(balls, board, params) {
 			collide_peg = board.FindNearestPeg(new_pos, kPegSearchRadius);
 			if (collide_peg == null) {
 				time_to_sim -= time_step;
+				current_time += time_step * 1000.0;
 				pos.CopyFrom(new_pos);
 			} else {
 				let delta = pos.DeltaToPoint(collide_peg);
@@ -99,7 +98,7 @@ function UpdateBalls(balls, board, params) {
 					vel.MutateAdd(SampleGaussianNoise(0, 1e-5));
 				}
 			}
-			CheckForTargetHits(board, balls[b]);
+			CheckForHits(board, balls[b], current_time);
 		}
 
 		// Invisible wall above the sides of the board to keep balls in play if they
@@ -118,10 +117,10 @@ function UpdateBalls(balls, board, params) {
 		}
 
 		balls[b].omega = omega;
-		balls[b].vel.y += params.accel / kFPS;
-		balls[b].rotation += omega / kFPS;
+		balls[b].vel.y += params.accel / kPhysicsFPS;
+		balls[b].rotation += omega / kPhysicsFPS;
 		balls[b].rotation %= k2Pi;
-		balls[b].total_rotations += Math.abs(omega) / kFPS;
+		balls[b].total_rotations += Math.abs(omega) / kPhysicsFPS;
 	}
 
 	// Remove balls that are inactive or have fallen outside the board.

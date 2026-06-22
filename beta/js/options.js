@@ -1,49 +1,43 @@
-class ColorSchemeClassMapping {
-	constructor(base_class, light_class, dark_class) {
-		this.base = base_class;
-		this.light = light_class;
-		this.dark = dark_class;
-	}
-}
+// List of class name suffixes for color schemes.
+const kColorSchemes = ["Light", "Dark"];
 
-const kColorSchemes = ["light", "dark"];
-
+// List of base classes that have variations based on the selected color scheme.
 const kColorSchemeClasses = [
-	new ColorSchemeClassMapping("messageBox", "messageBoxLight", "messageBoxDark"),
-	new ColorSchemeClassMapping("upgradesContainer", "upgradesContainerLight", "upgradesContainerDark"),
-	new ColorSchemeClassMapping("upgradesSubContainer", "upgradesSubContainerLight", "upgradesSubContainerDark"),
-	new ColorSchemeClassMapping("machinesContainer", "machinesContainerLight", "machinesContainerDark"),
-	new ColorSchemeClassMapping("statsContainer", "statsContainerLight", "statsContainerDark"),
-	new ColorSchemeClassMapping("optionsContainer", "optionsContainerLight", "optionsContainerDark"),
-	new ColorSchemeClassMapping("upgradesHeader", "upgradesHeaderLight", "upgradesHeaderDark"),
-	new ColorSchemeClassMapping("upgradesSubHeader", "upgradesSubHeaderLight", "upgradesSubHeaderDark"),
-	new ColorSchemeClassMapping("machinesHeader", "machinesHeaderLight", "machinesHeaderDark"),
-	new ColorSchemeClassMapping("statsHeader", "statsHeaderLight", "statsHeaderDark"),
-	new ColorSchemeClassMapping("optionsHeader", "optionsHeaderLight", "optionsHeaderDark"),
-	new ColorSchemeClassMapping("upgradeButton", "upgradeButtonLight", "upgradeButtonDark"),
-	new ColorSchemeClassMapping("rubyUpgradeButton", "rubyUpgradeButtonLight", "rubyUpgradeButtonDark"),
-	new ColorSchemeClassMapping("sapphireUpgradeButton", "sapphireUpgradeButtonLight", "sapphireUpgradeButtonDark"),
-	new ColorSchemeClassMapping("emeraldUpgradeButton", "emeraldUpgradeButtonLight", "emeraldUpgradeButtonDark"),
-	new ColorSchemeClassMapping("topazUpgradeButton", "topazUpgradeButtonLight", "topazUpgradeButtonDark"),
-	new ColorSchemeClassMapping("turquoiseUpgradeButton", "turquoiseUpgradeButtonLight", "turquoiseUpgradeButtonDark"),
-	new ColorSchemeClassMapping("amethystUpgradeButton", "amethystUpgradeButtonLight", "amethystUpgradeButtonDark"),
-	new ColorSchemeClassMapping("opalUpgradeButton", "opalUpgradeButtonLight", "opalUpgradeButtonDark"),
-	new ColorSchemeClassMapping("opalStaticUpgradeButton", "opalStaticUpgradeButtonLight", "opalStaticUpgradeButtonDark"),
-	new ColorSchemeClassMapping("eightBallUpgradeButton", "eightBallUpgradeButtonLight", "eightBallUpgradeButtonDark"),
-	new ColorSchemeClassMapping("beachBallUpgradeButton", "beachBallUpgradeButtonLight", "beachBallUpgradeButtonDark"),
-	new ColorSchemeClassMapping("rubberBandBallUpgradeButton", "rubberBandBallUpgradeButtonLight", "rubberBandBallUpgradeButtonDark"),
-	new ColorSchemeClassMapping("spiralBallUpgradeButton", "spiralBallUpgradeButtonLight", "spiralBallUpgradeButtonDark"),
-	new ColorSchemeClassMapping("machineButton", "machineButtonLight", "machineButtonDark"),
-	new ColorSchemeClassMapping("statsButton", "statsButtonLight", "statsButtonDark"),
-	new ColorSchemeClassMapping("optionButton", "optionButtonLight", "optionButtonDark"),
-	new ColorSchemeClassMapping("optionButtonRed", "optionButtonRedLight", "optionButtonRedDark"),
-	new ColorSchemeClassMapping("modalContent", "modalContentLight", "modalContentDark"),
-	new ColorSchemeClassMapping("modalCloseButton", "modalCloseButtonLight", "modalCloseButtonDark"),
-	new ColorSchemeClassMapping("prismaticText", "prismaticTextLight", "prismaticTextDark"),
-	new ColorSchemeClassMapping("speedrunTimerActive", "speedrunTimerActiveLight", "speedrunTimerActiveDark"),
-	new ColorSchemeClassMapping("speedrunTimerCompleted", "speedrunTimerCompletedLight", "speedrunTimerCompletedDark"),
-	new ColorSchemeClassMapping("speedrunTimerSplit", "speedrunTimerSplitLight", "speedrunTimerSplitDark"),
-	new ColorSchemeClassMapping("exportedSave", "exportedSaveLight", "exportedSaveDark"),
+	"messageBox",
+	"upgradesContainer",
+	"upgradesSubContainer",
+	"machinesContainer",
+	"statsContainer",
+	"optionsContainer",
+	"upgradesHeader",
+	"upgradesSubHeader",
+	"machinesHeader",
+	"statsHeader",
+	"optionsHeader",
+	"upgradeButton",
+	"rubyUpgradeButton",
+	"sapphireUpgradeButton",
+	"emeraldUpgradeButton",
+	"topazUpgradeButton",
+	"turquoiseUpgradeButton",
+	"amethystUpgradeButton",
+	"opalUpgradeButton",
+	"opalStaticUpgradeButton",
+	"eightBallUpgradeButton",
+	"beachBallUpgradeButton",
+	"rubberBandBallUpgradeButton",
+	"spiralBallUpgradeButton",
+	"machineButton",
+	"statsButton",
+	"optionButton",
+	"optionButtonRed",
+	"modalContent",
+	"modalCloseButton",
+	"prismaticText",
+	"speedrunTimerActive",
+	"speedrunTimerCompleted",
+	"speedrunTimerSplit",
+	"exportedSave",
 ];
 
 function GetSetting(id) {
@@ -175,6 +169,13 @@ function InitOptionButtons() {
 			on_update_func: () => {
 				state.redraw_all = true;
 			},
+		}),
+		new ListOptionButton({
+			id: "framerate",
+			display_name: "Framerate Cap",
+			values: ["120 FPS", "60 FPS", "30 FPS"],
+			default_value: 0,
+			on_update_func: UpdateRedrawRate,
 		}),
 		new OptionButton({
 			id: "popup_text",
@@ -317,6 +318,10 @@ function DefaultGlobalSettings() {
 			machines: false,
 			stats: true,
 			options: true,
+		},
+		bgm: {
+			volume: 50,
+			mute: false,
 		},
 	};
 	for (let i = 0; i < kOptionButtons.length; ++i) {
@@ -483,6 +488,52 @@ function ResizeModals() {
 		(content_height - kPadding * 2 - header_height - 15) + "px";
 }
 
+function ShowMusicPromptModal() {
+	document.getElementById("music_prompt_modal").style.display = "block";
+	ResizeModals();
+}
+
+function ShowMusicOptions() {
+	document.getElementById("options_sounds").style.display = "inline-block";
+	ResizeModals();
+}
+
+function OnBGMSettingChange(state) {
+	let slider_elem = document.getElementById("bgm_volume");
+	if (state.save_file.options.bgm.muted) {
+		state.bgm_gain_node.gain.value = 0;
+		slider_elem.value = 0;
+		UpdateInnerHTML("button_mute_bgm", "🔇");
+	} else {
+		let volume_percent = state.save_file.options.bgm.volume;
+		state.bgm_gain_node.gain.value = volume_percent / 100.0;
+		slider_elem.value = volume_percent;
+		UpdateInnerHTML("button_mute_bgm", "🔊");
+	}
+}
+
+function UpdateBGMVolume(elem) {
+	let new_volume = parseInt(elem.value);
+	if (new_volume < 1) {
+		state.save_file.options.bgm.muted = true;
+	} else {
+		state.save_file.options.bgm.volume = new_volume;
+	}
+	OnBGMSettingChange(state);
+}
+
+function MusicPromptChoice(enable_bgm) {
+	state.save_file.options.bgm.muted = !enable_bgm
+	ActiveMachine(state).OnMusicChoice(state);
+	CloseModal("music_prompt_modal");
+	OnBGMSettingChange(state);
+}
+
+function ToggleMuteBGM() {
+	state.save_file.options.bgm.muted = !state.save_file.options.bgm.muted;
+	OnBGMSettingChange(state);
+}
+
 function UpdateOptionsButtons() {
 	for (let i = 0; i < kOptionButtons.length; ++i) {
 		kOptionButtons[i].UpdateButton();
@@ -527,25 +578,33 @@ function UpdateDarkMode() {
 	var color_scheme;
 	if (GetSetting("dark_mode")) {
 		document.body.style.backgroundColor = "#000";
-		color_scheme = "dark";
+		color_scheme = "Dark";
 	} else {
 		document.body.style.backgroundColor = "#FFF";
-		color_scheme = "light";
+		color_scheme = "Light";
 	}
 
 	for (let i = 0; i < kColorSchemeClasses.length; ++i) {
-		let class_mapping = kColorSchemeClasses[i];
-		let elems = document.getElementsByClassName(class_mapping.base);
+		let base_class = kColorSchemeClasses[i];
+		let elems = document.getElementsByClassName(base_class);
 		for (let j = elems.length - 1; j >= 0; --j) {
 			let elem = elems[j];
 			for (let k = 0; k < kColorSchemes.length; ++k) {
 				if (kColorSchemes[k] == color_scheme) {
-					elem.classList.add(class_mapping[kColorSchemes[k]]);
+					elem.classList.add(base_class + kColorSchemes[k]);
 				} else {
-					elem.classList.remove(class_mapping[kColorSchemes[k]]);
+					elem.classList.remove(base_class + kColorSchemes[k]);
 				}
 			}
 		}
+	}
+}
+
+// Removes a class and all color scheme variations from `elem`.
+function RemoveClassAndVariants(elem, base_class) {
+	elem.classList.remove(base_class);
+	for (let i = 0; i < kColorSchemes.length; ++i) {
+		elem.classList.remove(base_class + kColorSchemes[i]);
 	}
 }
 
@@ -564,4 +623,19 @@ function OnNotationToggle() {
 	state.redraw_targets = true;
 	state.update_stats_panel = true;
 	UpdateSpinCounter();
+}
+
+function UpdateRedrawRate() {
+	const framerate_setting = GetSetting("framerate");
+	if (framerate_setting == 1) {
+		// 60 FPS, redraw every 2nd physics frame.
+		state.redraw_rate = 2;
+	} else if (framerate_setting == 2) {
+		// 30 FPS, redraw every 4th physics frame.
+		state.redraw_rate = 4;
+	} else {
+		// 120 FPS, redraw every physics frame.
+		state.redraw_rate = 1;
+	}
+	return;
 }

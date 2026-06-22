@@ -1,7 +1,7 @@
-const kVersion = "v2.1.5-beta";
+const kVersion = "v2.3.1-beta";
 const kTitleAndVersion = "Pachinkremental " + kVersion;
 
-const kFrameInterval = 1000.0 / kFPS;
+const kFrameInterval = 1000.0 / kPhysicsFPS;
 
 const kManualDropCooldown = 80.0;
 const kTopCanvasLayer = "canvas_ripples";
@@ -70,6 +70,8 @@ function LoadActiveMachine(state) {
 }
 
 function InitState() {
+	let bgm_gain_node = kAudioCtx.createGain();
+	bgm_gain_node.connect(kAudioCtx.destination);
 	let state = {
 		game_started: false,
 		all_maxed: false,
@@ -78,6 +80,7 @@ function InitState() {
 			new FirstMachine(kFirstMachineID, "Basic"),
 			new BumperMachine(kBumperMachineID, "Bumpers"),
 		],
+		bgm_gain_node: bgm_gain_node,
 		active_machine_index: 0,
 		balls_by_type: [],
 		score_text: new Array(0),
@@ -100,6 +103,7 @@ function InitState() {
 		display_points: 0,
 		canvas_scale: 2.0,
 		frames_since_redraw: 0,
+		redraw_rate: 1,
 		redraw_all: true,
 		redraw_targets: false,
 		redraw_auto_drop: false,
@@ -148,17 +152,22 @@ function InitState() {
 				score_last15s: 0,
 				score_last60s: 0,
 				start_time: Date.now(),
-				machine_maxed_times: {}
+				machine_maxed_times: {},
+				il_speedrun_pbs: {},
 			},
 			machines: {},
 			options: DefaultGlobalSettings(),
-		}
+		},
+		il_speedrun_active: false,
+		il_speedrun_complete: false,
+		il_speedrun_temp_save: null,
 	};
 	for (let i = 0; i < state.machines.length; ++i) {
 		let machine = state.machines[i];
 		let id = machine.id;
 		state.save_file.machines[id] = machine.DefaultSaveData();
 		state.save_file.stats.machine_maxed_times[id] = null;
+		state.save_file.stats.il_speedrun_pbs[id] = null;
 	}
 	return state;
 }
@@ -208,11 +217,52 @@ function CanDrop(state) {
 }
 
 function SwitchMachine(index) {
+	if (state.il_speedrun_active && !state.il_speedrun_complete) {
+		const kConfirmMessage =
+			"Are you sure you want to abandon your current IL speedrun?";
+		let answer = confirm(kConfirmMessage);
+		// Hacky workaround for the fact that we won't see an onkeyup event
+		// while the confirmation dialog is up.
+		state.holding_shift = false;
+		if (!answer) {
+			return;
+		}
+	}
+	
+	ActiveMachine(state).OnDeactivate();
 	state.active_machine_index = index;
 	const new_active_machine = state.machines[index];
 	state.save_file.active_machine = new_active_machine.id;
+
+	if (state.holding_shift) {
+		SpeedrunTimerStarted(state);
+		state.il_speedrun_active = true;
+		state.il_speedrun_complete = false;
+		state.il_speedrun_temp_save = ActiveMachine(state).DefaultSaveData();
+	} else {
+		state.il_speedrun_active = false;
+		state.il_speedrun_complete = false;
+		state.il_speedrun_temp_save = null;
+		if (state.all_maxed) {
+			StopSpeedrunTimer(state);
+		} else {
+			SpeedrunTimerStarted(state);
+			UpdateSpeedrunTimer(state);
+		}
+	}
+
 	LoadActiveMachine(state);
 	UpdateScoreDisplay(state, /*force_update=*/true);
+}
+
+function ILSpeedrunComplete(machine_name, time_elapsed_ms, is_new_pb) {
+	let time_elapsed_text = FormatDurationLong(time_elapsed_ms, /*show_ms=*/true);
+	UpdateInnerHTML("il_speedrun_complete_time", time_elapsed_text);
+	UpdateInnerHTML("il_speedrun_complete_machine_name", machine_name);
+	UpdateDisplay("il_speedrun_new_pb", is_new_pb ? "block" : "none");
+	UpdateDisplay("il_speedrun_complete_modal", "block");
+	StopILSpeedrunTimer(state, time_elapsed_ms);
+	state.il_speedrun_complete = true;
 }
 
 function UpdateOneFrame(state) {
@@ -225,7 +275,8 @@ function UpdateOneFrame(state) {
 			UpdateBalls(
 				state.balls_by_type[i],
 				machine.board,
-				ball_types[i].physics_params
+				ball_types[i].physics_params,
+				state.current_time,
 			);
 		}
 	}
@@ -259,6 +310,7 @@ function UpdateOneFrame(state) {
 	}
 
 	machine.UpdateOneFrame(state);
+	machine.board.UpdateOneFrame(state);
 
 	if (state.last_score_history_update + 5000.0 <= state.current_time) {
 		UpdateScoreHistory(state);
@@ -279,10 +331,10 @@ function IsAprilFoolsActive() {
 }
 
 function MillisecondsToMidnight() {
-  var now = new Date();
-  var midnight = new Date(now);
-  midnight.setHours(24, 0, 0, 0);
-  return (midnight - now);
+	var now = new Date();
+	var midnight = new Date(now);
+	midnight.setHours(24, 0, 0, 0);
+	return (midnight - now);
 }
 
 function CheckEvents() {
@@ -298,6 +350,7 @@ function CheckShiftKeyToggle(event) {
 	if (state.holding_shift != event.shiftKey) {
 		state.holding_shift = event.shiftKey;
 		state.update_upgrade_buttons_text = true;
+		UpdateMachinesHeader(state);
 	}
 }
 
@@ -322,7 +375,7 @@ function Update() {
 
 function OnAnimationFrame() {
 	Update();
-	if (state.frames_since_redraw <= 0) {
+	if (state.frames_since_redraw < state.redraw_rate) {
 		requestAnimationFrame(OnAnimationFrame);
 		return;
 	}
@@ -386,9 +439,13 @@ function OnClick(event) {
 		let save_data = machine.GetSaveData();
 		let time_since_prev_drop = state.current_time - state.last_ball_drop;
 		if (time_since_prev_drop >= kManualDropCooldown && CanDrop(state)) {
-			if (!state.game_started) {
-				state.game_started = true;
-				state.save_file.stats.start_time = Date.now();
+			if (save_data.stats.balls_dropped == 0) {
+				let timestamp = Date.now();
+				save_data.stats.start_time = timestamp;
+				if (!state.game_started) {
+					state.game_started = true;
+					state.save_file.stats.start_time = timestamp;
+				}
 			}
 			DropBall(board_x, board_y);
 			++save_data.stats.balls_dropped_manual;
@@ -433,8 +490,18 @@ function Load() {
 	DisplayArchivedSaveFileButtons();
 	UpdateDarkMode();
 	UpdateOpalBallUpgradesStyle();
+	UpdateRedrawRate();
 
 	window.onresize = OnResize;
+
+	window.addEventListener("beforeunload", function (e) {
+		if (state.il_speedrun_active && !state.il_speedrun_complete) {
+			const kConfirmMessage = "Are you sure you want to quit? "
+				+ "Your IL speedrun will not be saved!";
+			(e || window.event).returnValue = kConfirmMessage;  // Gecko + IE
+			return kConfirmMessage;  // Gecko + Webkit, Safari, Chrome etc.
+		}
+	});
 
 	Draw(state);
 
